@@ -1,0 +1,30 @@
+[PROPERTIES]
+id = 2
+name = demo-stage-2
+row-count = 10
+column-count = 10
+
+[MARKERS]
+==========
+#        #
+#        #
+#        #
+#        #
+#        #
+#        #
+#        #
+#        #
+==========
+
+[MODIFIERS]
+bbbbbbbbbb
+bffffffffb
+bffffffffb
+bffffffffb
+bffffffffb
+bffffffffb
+bffffffffb
+bffffffffb
+bffffffffb
+bbbbbbbbbb
+

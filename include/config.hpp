@@ -1,0 +1,3 @@
+#define STAGE_CACHE_CAP 5
+#define ACTOR_CACHE_CAP 24
+
