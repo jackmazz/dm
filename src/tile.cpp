@@ -29,7 +29,7 @@ namespace dm {
         this->_parent = parent;
         this->_row = row;
         this->_column = column;
-        this->_occupant = nullptr;
+        this->_actor = nullptr;
         
         this->setMarker(marker);
         this->setModifier(modifier);
@@ -40,37 +40,49 @@ namespace dm {
 // ====================================================================================================
 // | ACCESSORS |
 // =============    
-
-    Stage* Tile::parent(void) {
+    
+    const Stage* Tile::getParent(void) const {
         return this->_parent;
     }
     
-    std::size_t Tile::row(void) {
+    Stage* Tile::getParent(void) {
+        return const_cast<Stage*>(
+            static_cast<const Tile*>(this)->getParent()
+        );
+    }
+    
+    std::size_t Tile::getRow(void) const {
         return this->_row;
     }
     
-    std::size_t Tile::column(void) {
+    std::size_t Tile::getColumn(void) const {
         return this->_column;
     }
     
-    char Tile::marker(void) {
+    char Tile::getMarker(void) const {
         return this->_marker;
     }
     
-    char Tile::modifier(void) {
+    char Tile::getModifier(void) const {
         return this->_modifier;
     }
     
-    bool Tile::isBlocked(void) {
-        return this->modifier() == DM_TILE_MODIFIER_BARRIER;
+    bool Tile::isBlocked(void) const {
+        return this->getModifier() == DM_TILE_MODIFIER_BARRIER;
     }
     
-    Actor* Tile::occupant(void) {
-        return this->_occupant;
+    const Actor* Tile::getActor(void) const {
+        return this->_actor;
     }
     
-    bool Tile::isOccupied(void) {
-        return this->occupant() != nullptr;
+    Actor* Tile::getActor(void) {
+        return const_cast<Actor*>(
+            static_cast<const Tile*>(this)->getActor()
+        );
+    }
+    
+    bool Tile::isOccupied(void) const {
+        return this->getActor() != nullptr;
     }
 
 // ====================================================================================================
@@ -85,33 +97,38 @@ namespace dm {
         this->_modifier = modifier;
     }
     
-    void Tile::setOccupant(Actor* occupant) {
-        this->setOccupant(occupant, true);
+    void Tile::setActor(Actor* actor) {
+        this->setActor(actor, true);
     }
     
-    void Tile::setOccupant(Actor* occupant, bool transit) {
+    void Tile::setActor(Actor* actor, bool transit) {
+        Actor* prevActor = this->getActor();
+    
         // avoid infinite loop
-        if (this->occupant() == occupant) {
+        if (actor == prevActor) {
             return;
         }
         
-        // change the tile's occupant
-        Actor* prevOccupant = this->occupant();
-        this->_occupant = occupant;
+        // change this tile's actor
+        this->_actor = actor;
         
-        // if the tile was occupied, set old occupant's placement to the null pointer
-        if (prevOccupant != nullptr) {
-            prevOccupant->setPlacement(nullptr);
+        // if this tile was occupied, set the old actor's tile to the null pointer
+        if (prevActor != nullptr) {
+            prevActor->setTile(nullptr);
+            
+            // if transitioning, update the parent's actor list
             if (transit) {
-                this->parent()->removeOccupant(prevOccupant);
+                this->getParent()->removeActor(prevActor);
             }
         }
         
-        // if the tile is now occupied, set new occupants's placement to the tile
+        // if this tile is now occupied, set the new actor's tile to this tile
         if (this->isOccupied()) {
-            occupant->setPlacement(this);
+            actor->setTile(this);
+            
+            // if transitioning, update the parent's actor list
             if (transit) {
-                this->parent()->addOccupant(occupant);
+                this->getParent()->addActor(actor);
             }
         }
     }
@@ -120,11 +137,11 @@ namespace dm {
 // | CONVERTERS |
 // ==============
 
-    std::string Tile::toString(void) {
+    std::string Tile::toString(void) const {
         if (this->isOccupied()) {
-            return this->occupant()->toString();
+            return this->getActor()->toString();
         } else {
-            return std::string(1, this->marker());
+            return std::string(1, this->getMarker());
         }
     }
 }

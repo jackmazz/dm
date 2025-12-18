@@ -1,3 +1,6 @@
+[ACTORS]
+1, ../assets/actors/demo-actor-1.dmo
+
 [MARKERS]
 ==========
 |        |
@@ -9,9 +12,6 @@
 |        |
 |        |
 ==========
-
-[OCCUPANTS]
-1, ../assets/actors/demo-actor-1.dmo
 
 [MODIFIERS]
 bbbbbbbbbb

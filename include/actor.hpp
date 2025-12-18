@@ -1,25 +1,24 @@
 #pragma once
 
 #include "config.hpp"
+#include "tile.hpp"
+#include "utils/asset.hpp"
 #include "utils/cache.hpp"
 
 #include <string>
 
-namespace dm {
-    // forward declarations
-    class Tile;
-    
-    class Actor : public CacheEntry {
+namespace dm {    
+    class Actor : public Asset {
         public:
             /* constructors & destructors */
-                explicit Actor(void);
+                Actor(void);
                 
-                explicit Actor (
+                Actor (
                     unsigned long id,
                     const std::string& filePath
                 );
                 
-                explicit Actor (
+                Actor (
                     unsigned long id,
                     const std::string& filePath,
                     const std::string& name,
@@ -28,26 +27,21 @@ namespace dm {
                 
                 ~Actor(void);
             
-            /* accessors */
-                std::string filePath(void);
+            /* accessors */                
+                char getMarker(void) const;
                 
-                std::string name(void);
-                
-                char marker(void);
-                
-                Tile* placement(void);
-                bool isPlaced(void);
+                const Tile* getTile(void) const;
+                Tile* getTile(void);
+                bool isPlaced(void) const;
             
             /* modifiers */
-                void setName(const std::string& name);
-            
-                void setPlacement(Tile* placement);
-                void setPlacement(Tile* placement, bool transit);
+                void setTile(Tile* tile);
+                void setTile(Tile* tile, bool transit);
                 
                 void setMarker(char marker);
             
             /* converters */
-                std::string toString(void);
+                std::string toString(void) const;
             
             /* logistics */
                 static Actor* load(const std::string& filePath);
@@ -56,14 +50,14 @@ namespace dm {
         
         private:
             /* members */
-                static Cache<Actor, ACTOR_CACHE_CAP> _cache;    // actor storage
+                static Cache<           // actor storage
+                    Actor, 
+                    ACTOR_CACHE_CAP
+                > _cache;
                 
-                std::string _filePath;                          // path to load & unload
+                char _marker;           // display character
                 
-                std::string _name;                              // display name
-                char _marker;                                   // display character
-                
-                Tile* _placement;                               // tile the actor occupies
+                Tile* _tile;            // tile the actor occupies
     };
 }
 

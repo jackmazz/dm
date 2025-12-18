@@ -2,6 +2,7 @@
 
 #include "config.hpp"
 #include "tile.hpp"
+#include "utils/asset.hpp"
 #include "utils/cache.hpp"
 
 #include <cstddef>
@@ -10,19 +11,19 @@
 #include <vector>
 
 namespace dm {    
-    class Stage : public CacheEntry {
+    class Stage : public Asset {
         public:
             /* constructors & destructors */
-                explicit Stage(void);
+                Stage(void);
                 
-                explicit Stage(
+                Stage(
                     unsigned long id,
                     const std::string& filePath,
                     std::size_t rowCount, 
                     std::size_t columnCount
                 );
                 
-                explicit Stage(
+                Stage(
                     unsigned long id,
                     const std::string& filePath,
                     const std::string& name,
@@ -34,30 +35,21 @@ namespace dm {
                 
                 ~Stage(void);
             
-            /* accessors */
-                std::string filePath(void);
+            /* accessors */                
+                std::size_t getSize(void) const;
+                std::size_t getRowCount(void) const;
+                std::size_t getColumnCount(void) const;
+                bool isInBounds(std::size_t row, std::size_t column) const;
                 
-                std::string name(void);
-                
-                std::size_t size(void);
-                std::size_t rowCount(void);
-                std::size_t columnCount(void);
-                bool inBounds(std::size_t row, std::size_t column);
-                
-                Tile* tileAt(std::size_t row, std::size_t column);
-                
-                std::vector<Actor*> occupants(void);
-                std::size_t occupantCount(void);
-                bool containsOccupant(Actor *actor);
+                const Tile* getTile(std::size_t row, std::size_t column) const;
+                Tile* getTile(std::size_t row, std::size_t column);
             
-            /* modifiers */
-                void setName(const std::string& name);
-                
-                void addOccupant(Actor *occupant);
-                void removeOccupant(Actor *occupant);
+            /* modifiers */                
+                void addActor(Actor *actor);
+                void removeActor(Actor *actor);
             
             /* converters */
-                std::string toString(void);
+                std::string toString(void) const;
             
             /* logistics */
                 static Stage* load(const std::string& filePath);
@@ -66,22 +58,20 @@ namespace dm {
         
         private:        
             /* members */
-                static Cache<Stage, STAGE_CACHE_CAP> _cache;    // stage storage
-                
-                unsigned long _id;                              // unique id
-                std::string _filePath;                          // path to load & unload
-                
-                std::string _name;                              // display name
+                static Cache<               // stage storage
+                    Stage, 
+                    STAGE_CACHE_CAP
+                > _cache;
             
-                std::size_t _rowCount;                          // grid #of rows
-                std::size_t _columnCount;                       // grid #of columns
+                std::size_t _rowCount;      // grid #of rows
+                std::size_t _columnCount;   // grid #of columns
                 
-                std::vector<Tile> _tiles;                       // tile storage
+                std::vector<Tile> _tiles;   // tile storage
                 
-                std::set<std::pair<                             // actor information storage
+                std::set<std::pair<         // actor information storage
                     unsigned long, 
                     std::string
-                >> _occupantInfo;
+                >> _actorInfo;
     };
 }
 

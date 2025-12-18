@@ -33,27 +33,29 @@ namespace dm {
                 ~Tile(void);
             
             /* accessors */
-                Stage* parent(void);
+                const Stage* getParent(void) const;
+                Stage* getParent(void);
                 
-                std::size_t row(void);
-                std::size_t column(void);
+                std::size_t getRow(void) const;
+                std::size_t getColumn(void) const;
                           
-                char marker(void);
-                char modifier(void);
-                bool isBlocked(void);
+                char getMarker(void) const;
+                char getModifier(void) const;
+                bool isBlocked(void) const;
                 
-                Actor* occupant(void);
-                bool isOccupied(void);
+                const Actor* getActor(void) const;
+                Actor* getActor(void);
+                bool isOccupied(void) const;
             
             /* modifiers */
                 void setMarker(char marker);
                 void setModifier(char modifer);
                 
-                void setOccupant(Actor* occupant);
-                void setOccupant(Actor* occupant, bool transit);
+                void setActor(Actor* actor);
+                void setActor(Actor* actor, bool transit);
             
             /* converters */
-                std::string toString(void);
+                std::string toString(void) const;
         
         private:
             /* members */
@@ -65,7 +67,7 @@ namespace dm {
                 char _marker;           // display character
                 char _modifier;         // whether the tile is a floor, barrier, door, etc.
                 
-                Actor* _occupant;       // actor occupying the tile
+                Actor* _actor;          // actor occupying the tile
     };
 }
 

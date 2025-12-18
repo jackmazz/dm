@@ -6,7 +6,7 @@ SRC_DIR := ../src
 OBJS = $(OBJ_DIR)/stage.o
 OBJS += $(OBJ_DIR)/tile.o
 OBJS += $(OBJ_DIR)/actor.o
-OBJS += $(OBJ_DIR)/utils/cache.o
+OBJS += $(OBJ_DIR)/utils/asset.o
 OBJS += $(OBJ_DIR)/utils/object.o
 OBJS += $(OBJ_DIR)/utils/string-utils.o
 

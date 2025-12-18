@@ -17,7 +17,7 @@
 #define _PROPERTIES_SECTION_HEADER "[PROPERTIES]"
 #define _MARKERS_SECTION_HEADER "[MARKERS]"
 #define _MODIFIERS_SECTION_HEADER "[MODIFIERS]"
-#define _OCCUPANTS_SECTION_HEADER "[OCCUPANTS]"
+#define _ACTORS_SECTION_HEADER "[ACTORS]"
 
 namespace dm {
 
@@ -42,14 +42,11 @@ namespace dm {
         std::size_t columnCount,
         const std::string& markers,
         const std::string& modifiers
-    ) : CacheEntry(id) {
-        this->_filePath = filePath;
+    ) : Asset(id, filePath, name) {
         this->_rowCount = rowCount;
         this->_columnCount = columnCount;
         
-        this->setName(name);
-        
-        std::size_t k = 0; // marker & isBarrier index
+        std::size_t k = 0; // marker & modifier index
         for (std::size_t i = 0; i < rowCount; i++) {
             for (std::size_t j = 0; j < columnCount; j++) {                
                 // use default marker if not available for index k
@@ -82,110 +79,75 @@ namespace dm {
 // | ACCESSORS |
 // =============
     
-    std::string Stage::filePath(void) {
-        return this->_filePath;
+    std::size_t Stage::getSize(void) const {
+        return this->getRowCount() * this->getColumnCount();
     }
     
-    std::string Stage::name(void) {
-        return this->_name;
-    }
-    
-    std::size_t Stage::size(void) {
-        return this->rowCount() * this->columnCount();
-    }
-    
-    std::size_t Stage::rowCount(void) {
+    std::size_t Stage::getRowCount(void) const {
         return this->_rowCount;
     }
     
-    std::size_t Stage::columnCount(void) {
+    std::size_t Stage::getColumnCount(void) const {
         return this->_columnCount;
     }
     
-    bool Stage::inBounds(std::size_t row, std::size_t column) {
-        return row < this->rowCount() && column < this->columnCount();
+    bool Stage::isInBounds(std::size_t row, std::size_t column) const {
+        return row < this->getRowCount() && column < this->getColumnCount();
     }
     
-    Tile* Stage::tileAt(std::size_t row, std::size_t column) {        
+    const Tile* Stage::getTile(std::size_t row, std::size_t column) const {        
         // return the null pointer if row & column are out-of-bounds
-        if (!this->inBounds(row, column)) {
+        if (!this->isInBounds(row, column)) {
             return nullptr;
         }
         
-        std::size_t index = row * this->columnCount() + column; // 1-dimensional index
+        std::size_t index = row * this->getColumnCount() + column; // 1-dimensional index
         return &this->_tiles[index];
     }
     
-    std::vector<Actor*> Stage::occupants(void) {
-        std::vector<Actor*> occupants;
-        for (std::pair<unsigned long, std::string> info : this->_occupantInfo) {
-            Actor* occupant = Actor::select(info.first);
-            if (occupant != nullptr) {
-                occupants.push_back(occupant);
-            }
-        }
-        
-        return occupants;
-    }
-    
-    std::size_t Stage::occupantCount(void) {
-        return this->_occupantInfo.size();
-    }
-    
-    bool Stage::containsOccupant(Actor *actor) {
-        if (actor == nullptr) {
-            return false;
-        }
-    
-        std::pair<unsigned long, std::string> info(
-            actor->id(), 
-            actor->filePath()
+    Tile* Stage::getTile(std::size_t row, std::size_t column) {        
+        return const_cast<Tile*>(
+            static_cast<const Stage*>(this)->getTile(row, column)
         );
-        
-        return this->_occupantInfo.find(info) != this->_occupantInfo.end();
     }
 
 // ====================================================================================================
 // | MODIFIERS |
 // =============
 
-    void Stage::setName(const std::string& name) {
-        this->_name = name;
-    }
-    
-    void Stage::addOccupant(Actor *occupant) {
-        if (occupant != nullptr) {
-            this->_occupantInfo.emplace(occupant->id(), occupant->filePath());
+    void Stage::addActor(Actor *actor) {
+        if (actor != nullptr) {
+            this->_actorInfo.emplace(actor->getId(), actor->getFilePath());
         }
     }
     
-    void Stage::removeOccupant(Actor *occupant) {
+    void Stage::removeActor(Actor *actor) {
         std::pair<unsigned long, std::string> info(
-            occupant->id(), 
-            occupant->filePath()
+            actor->getId(), 
+            actor->getFilePath()
         );
         
-        this->_occupantInfo.erase(info);
+        this->_actorInfo.erase(info);
     }
     
 // ====================================================================================================
 // | CONVERTERS |
 // ==============
 
-    std::string Stage::toString(void) {
-        std::string str;
-        for (std::size_t i = 0; i < this->rowCount(); i++) {
-            for (std::size_t j = 0; j < this->columnCount(); j++) {
-                str += this->tileAt(i, j)->toString();
+    std::string Stage::toString(void) const {
+        std::string string;
+        for (std::size_t i = 0; i < this->getRowCount(); i++) {
+            for (std::size_t j = 0; j < this->getColumnCount(); j++) {
+                string += this->getTile(i, j)->toString();
             }
             
             // separate rows using a newline
-            if (i < this->rowCount()-1) {
-                str += "\n";
+            if (i < this->getRowCount()-1) {
+                string += "\n";
             }
         }
         
-        return str;
+        return string;
     }
     
 // ====================================================================================================
@@ -257,8 +219,8 @@ namespace dm {
                 }
             }
             
-            // process the occupant information section
-            else if (header == _OCCUPANTS_SECTION_HEADER) {
+            // process the actor information section
+            else if (header == _ACTORS_SECTION_HEADER) {
                 for (const std::string& entry: entries) {
                     std::vector<std::string> split = splitString(entry, ",", 2);
                     if (split.size() != 2) {
@@ -283,10 +245,10 @@ namespace dm {
         
         // unload a stage if the cache exceeds it's capacity
         if (Stage::_cache.isFull()) {
-            Stage::unload(Stage::_cache.front());
+            Stage::unload(Stage::_cache.getFront());
         }
         
-        // store the stage
+        // store this stage
         Stage* stage = Stage::_cache.store(
             id,
             filePath,
@@ -299,15 +261,15 @@ namespace dm {
         
         for (std::pair<unsigned long, std::string> pair : actorInfo) {
             // attempt to select the actor, load if necessary
-            Actor* occupant = Actor::select(pair.first);
-            if (occupant == nullptr) {
-                occupant = Actor::load(pair.second);
-                if (occupant == nullptr) {
+            Actor* actor = Actor::select(pair.first);
+            if (actor == nullptr) {
+                actor = Actor::load(pair.second);
+                if (actor == nullptr) {
                     continue;
                 }
             }
             
-            stage->addOccupant(occupant);
+            stage->addActor(actor);
         }
         
         return stage;
@@ -326,23 +288,23 @@ namespace dm {
         std::vector<std::string> properties;
         std::vector<std::string> markers;
         std::vector<std::string> modifiers;
-        std::vector<std::string> occupantInfo;
+        std::vector<std::string> actorInfo;
         
         // append properties
-        properties.push_back("id = " + std::to_string(stage->id()));
-        properties.push_back("name = " + stage->name());
-        properties.push_back("row-count = " + std::to_string(stage->rowCount()));
-        properties.push_back("column-count = " + std::to_string(stage->columnCount()));
+        properties.push_back("id = " + std::to_string(stage->getId()));
+        properties.push_back("name = " + stage->getName());
+        properties.push_back("row-count = " + std::to_string(stage->getRowCount()));
+        properties.push_back("column-count = " + std::to_string(stage->getColumnCount()));
         
         // append each row of markers & modifiers
-        for (std::size_t i = 0; i < stage->rowCount(); i++) {
+        for (std::size_t i = 0; i < stage->getRowCount(); i++) {
             std::string markerRow;
             std::string modifierRow;
         
-            for (std::size_t j = 0; j < stage->columnCount(); j++) {
-                Tile* tile = stage->tileAt(i, j);
-                markerRow += std::string(1, tile->marker());
-                modifierRow += std::string(1, tile->modifier());
+            for (std::size_t j = 0; j < stage->getColumnCount(); j++) {
+                Tile* tile = stage->getTile(i, j);
+                markerRow += std::string(1, tile->getMarker());
+                modifierRow += std::string(1, tile->getModifier());
             }
             
             markers.push_back(markerRow);
@@ -350,18 +312,18 @@ namespace dm {
         }
         
         // append each row of actor info
-        for (std::pair<unsigned long, std::string> info : stage->_occupantInfo) {
-            occupantInfo.push_back(std::to_string(info.first) + ", " + info.second);
+        for (std::pair<unsigned long, std::string> info : stage->_actorInfo) {
+            actorInfo.push_back(std::to_string(info.first) + ", " + info.second);
         }
         
         // map headers to entries
         object[_PROPERTIES_SECTION_HEADER] = properties;
         object[_MARKERS_SECTION_HEADER] = markers;
         object[_MODIFIERS_SECTION_HEADER] = modifiers;
-        object[_OCCUPANTS_SECTION_HEADER] = occupantInfo;
+        object[_ACTORS_SECTION_HEADER] = actorInfo;
         
         // write the object, return whether the write was successful
-        return object.write(stage->filePath());
+        return object.write(stage->getFilePath());
     }
 }
 

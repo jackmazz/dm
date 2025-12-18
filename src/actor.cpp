@@ -33,11 +33,8 @@ namespace dm {
         const std::string& filePath,
         const std::string& name,
         char marker
-    ) : CacheEntry(id) {
-        this->_filePath = filePath;
-        this->_placement = nullptr;
-        
-        this->setName(name);
+    ) : Asset(id, filePath, name) {
+        this->_tile = nullptr;
         this->setMarker(marker);
     }
     
@@ -47,72 +44,70 @@ namespace dm {
 // | ACCESSORS |
 // =============
     
-    std::string Actor::filePath(void) {
-        return this->_filePath;
-    }
-    
-    std::string Actor::name(void) {
-        return this->_name;
-    }
-    
-    char Actor::marker(void) {
+    char Actor::getMarker(void) const {
         return this->_marker;
     }
     
-    Tile* Actor::placement(void) {
-        return this->_placement;
+    const Tile* Actor::getTile(void) const {
+        return this->_tile;
     }
     
-    bool Actor::isPlaced(void) {
-        return this->placement() != nullptr;
+    Tile* Actor::getTile(void) {
+        return const_cast<Tile*>(
+            static_cast<const Actor*>(this)->getTile()
+        );
+    }
+    
+    bool Actor::isPlaced(void) const {
+        return this->getTile() != nullptr;
     }
     
 // ====================================================================================================
 // | MODIFIERS |
 // =============
-
-    void Actor::setName(const std::string& name) {
-        this->_name = name;
-    }
     
     void Actor::setMarker(char marker) {
         this->_marker = marker;
     }
 
-    void Actor::setPlacement(Tile* placement) {        
+    void Actor::setTile(Tile* tile) {        
         /* transition if:
             - moving to a new stage
             - moving from nothing to a stage
             - moving from a stage to nothing
         */
         
+        Tile* prevTile = this->getTile();
         bool transit = (
-            this->placement() == nullptr || placement == nullptr
+            tile != prevTile
+        ) && ((
+            (tile == nullptr) != (prevTile == nullptr)
         ) || (
-            this->placement()->parent() != placement->parent()
-        );
+            tile->getParent() != prevTile->getParent()
+        ));
         
-        this->setPlacement(placement, transit);
+        this->setTile(tile, transit);
     }
     
-    void Actor::setPlacement(Tile* placement, bool transit) {
+    void Actor::setTile(Tile* tile, bool transit) {
+        Tile* prevTile = this->getTile();
+    
         // avoid infinite loop
-        if (this->placement() == placement) {
+        if (tile == prevTile) {
             return;
         }
 
-        // change the actor's tile
-        Tile* prevPlacement = this->placement();
-        this->_placement = placement;
+        // change this actor's tile
+        this->_tile = tile;
         
-        // if the actor was placed, set old tile's occupant to the null pointer
-        if (prevPlacement != nullptr) {
-            prevPlacement->setOccupant(nullptr, transit);
+        // if this actor was placed, set old tile's actor to the null pointer
+        if (prevTile != nullptr) {
+            prevTile->setActor(nullptr, transit);
         }
         
-        // if the actor is now placed, set new tile's occupant to the actor
+        // if this actor is now placed, set new tile's actor to this actor
         if (this->isPlaced()) {
-            placement->setOccupant(this, transit);
+            tile->setActor(this, transit);
         }
     }
     
@@ -120,8 +115,8 @@ namespace dm {
 // | CONVERTERS |
 // ==============
 
-    std::string Actor::toString(void) {
-        return std::string(1, this->marker());
+    std::string Actor::toString(void) const {
+        return std::string(1, this->getMarker());
     }
     
 // ====================================================================================================
@@ -137,7 +132,7 @@ namespace dm {
             return nullptr;
         }
         
-        Tile* placement = nullptr;
+        Tile* tile = nullptr;
         unsigned long id;
         std::string name;
         char marker;
@@ -179,7 +174,7 @@ namespace dm {
                         
                         Stage* stage = Stage::select(stageId);
                         if (stage != nullptr) {
-                            placement = stage->tileAt(row, column);
+                            tile = stage->getTile(row, column);
                         }
                     }
                 }
@@ -195,7 +190,7 @@ namespace dm {
         
         // unload an actor if the cache exceeds it's capacity
         if (Actor::_cache.isFull()) {
-            Actor::unload(Actor::_cache.front());
+            Actor::unload(Actor::_cache.getFront());
         }
         
         // store the actor
@@ -205,7 +200,7 @@ namespace dm {
             name,
             marker
         );
-        actor->setPlacement(placement);
+        actor->setTile(tile);
         
         return actor;
     }
@@ -223,23 +218,38 @@ namespace dm {
         std::vector<std::string> properties;
         
         // append properties
-        properties.push_back("id = " + std::to_string(actor->id()));
-        properties.push_back("name = " + actor->name());
-        properties.push_back("marker = " + std::string(1, actor->marker()));
+        properties.push_back("id = " + std::to_string(actor->getId()));
+        properties.push_back("name = " + actor->getName());
+        properties.push_back("marker = " + std::string(1, actor->getMarker()));
         if (actor->isPlaced()) {
-            properties.push_back("stage-id = " + std::to_string(actor->placement()->parent()->id()));
-            properties.push_back("row = " + std::to_string(actor->placement()->row()));
-            properties.push_back("column = " + std::to_string(actor->placement()->column()));
+            properties.push_back("stage-id = " + std::to_string(
+                actor
+                ->getTile()
+                ->getParent()
+                ->getId()
+            ));
+            
+            properties.push_back("row = " + std::to_string(
+                actor
+                ->getTile()
+                ->getRow()
+            ));
+            
+            properties.push_back("column = " + std::to_string(
+                actor
+                ->getTile()
+                ->getColumn()
+            ));
         }
         
         // map headers to entries
         object[_PROPERTIES_SECTION_HEADER] = properties;
         
         // remove the actor
-        actor->setPlacement(nullptr, false);
+        actor->setTile(nullptr, false);
         
         // write the object, return whether the write was successful
-        return object.write(actor->filePath());
+        return object.write(actor->getFilePath());
     }
 }
 
