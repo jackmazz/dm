@@ -1,4 +1,5 @@
 #include "utils/asset.hpp"
+#include "utils/dmo-utils.hpp"
 
 #include <cstddef>
 #include <string>

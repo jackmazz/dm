@@ -3,11 +3,10 @@
 #include "stage.hpp"
 #include "tile.hpp"
 #include "utils/cache.hpp"
-#include "utils/object.hpp"
+#include "utils/dmo-utils.hpp"
 #include "utils/string-utils.hpp"
 
 #include <cstddef>
-#include <deque>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -122,12 +121,10 @@ namespace dm {
     }
     
     void Stage::removeActor(Actor *actor) {
-        std::pair<unsigned long, std::string> info(
+        this->_actorInfo.erase(std::make_pair(
             actor->getId(), 
             actor->getFilePath()
-        );
-        
-        this->_actorInfo.erase(info);
+        ));
     }
     
 // ====================================================================================================
@@ -136,18 +133,61 @@ namespace dm {
 
     std::string Stage::toString(void) const {
         std::string string;
+        std::string newLine;
+        
         for (std::size_t i = 0; i < this->getRowCount(); i++) {
+            // separate rows using a newline
+            string += newLine;
+            newLine = "\n";
+            
             for (std::size_t j = 0; j < this->getColumnCount(); j++) {
                 string += this->getTile(i, j)->toString();
-            }
-            
-            // separate rows using a newline
-            if (i < this->getRowCount()-1) {
-                string += "\n";
             }
         }
         
         return string;
+    }
+    
+    DMO Stage::toDMO(void) const {
+        DMO dmo;
+        std::vector<std::string> properties;
+        std::vector<std::string> markers;
+        std::vector<std::string> modifiers;
+        std::vector<std::string> actorInfo;
+        
+        // append properties
+        properties.push_back("id = " + std::to_string(stage->getId()));
+        properties.push_back("name = " + stage->getName());
+        properties.push_back("row-count = " + std::to_string(stage->getRowCount()));
+        properties.push_back("column-count = " + std::to_string(stage->getColumnCount()));
+        
+        // append each row of markers & modifiers
+        for (std::size_t i = 0; i < stage->getRowCount(); i++) {
+            std::string markerRow;
+            std::string modifierRow;
+        
+            for (std::size_t j = 0; j < stage->getColumnCount(); j++) {
+                Tile* tile = stage->getTile(i, j);
+                markerRow += std::string(1, tile->getMarker());
+                modifierRow += std::string(1, tile->getModifier());
+            }
+            
+            markers.push_back(markerRow);
+            modifiers.push_back(modifierRow);
+        }
+        
+        // append each row of actor info
+        for (std::pair<unsigned long, std::string> info : stage->_actorInfo) {
+            actorInfo.push_back(std::to_string(info.first) + ", " + info.second);
+        }
+        
+        // map headers to entries
+        dmo[_PROPERTIES_SECTION_HEADER] = properties;
+        dmo[_MARKERS_SECTION_HEADER] = markers;
+        dmo[_MODIFIERS_SECTION_HEADER] = modifiers;
+        dmo[_ACTORS_SECTION_HEADER] = actorInfo;
+        
+        return dmo;
     }
     
 // ====================================================================================================
@@ -157,9 +197,9 @@ namespace dm {
     Cache<Stage, STAGE_CACHE_CAP> Stage::_cache;
 
     Stage* Stage::load(const std::string& filePath) {
-        // attempt to read into an object
-        Object object;
-        if (!object.read(filePath)) {
+        // attempt to read into a dmo
+        DMO dmo;
+        if (!dmoRead(filePath)) {
             return nullptr;
         }
         
@@ -171,7 +211,7 @@ namespace dm {
         std::string modifiers = "";
         std::vector<std::pair<unsigned long, std::string>> actorInfo;
         
-        for (const ObjectSection& section : object) {
+        for (const DMOSection& section : dmo) {
             const std::string& header = section.first;
             const std::vector<std::string>& entries = section.second;
         
@@ -283,47 +323,12 @@ namespace dm {
         if (stage == nullptr) {
             return false;
         }
-    
-        Object object;
-        std::vector<std::string> properties;
-        std::vector<std::string> markers;
-        std::vector<std::string> modifiers;
-        std::vector<std::string> actorInfo;
         
-        // append properties
-        properties.push_back("id = " + std::to_string(stage->getId()));
-        properties.push_back("name = " + stage->getName());
-        properties.push_back("row-count = " + std::to_string(stage->getRowCount()));
-        properties.push_back("column-count = " + std::to_string(stage->getColumnCount()));
+        // convert the stage to a DMO
+        DMO dmo = stage->toDMO();
         
-        // append each row of markers & modifiers
-        for (std::size_t i = 0; i < stage->getRowCount(); i++) {
-            std::string markerRow;
-            std::string modifierRow;
-        
-            for (std::size_t j = 0; j < stage->getColumnCount(); j++) {
-                Tile* tile = stage->getTile(i, j);
-                markerRow += std::string(1, tile->getMarker());
-                modifierRow += std::string(1, tile->getModifier());
-            }
-            
-            markers.push_back(markerRow);
-            modifiers.push_back(modifierRow);
-        }
-        
-        // append each row of actor info
-        for (std::pair<unsigned long, std::string> info : stage->_actorInfo) {
-            actorInfo.push_back(std::to_string(info.first) + ", " + info.second);
-        }
-        
-        // map headers to entries
-        object[_PROPERTIES_SECTION_HEADER] = properties;
-        object[_MARKERS_SECTION_HEADER] = markers;
-        object[_MODIFIERS_SECTION_HEADER] = modifiers;
-        object[_ACTORS_SECTION_HEADER] = actorInfo;
-        
-        // write the object, return whether the write was successful
-        return object.write(stage->getFilePath());
+        // write the dmo, return whether the write was successful
+        return dmoWrite(stage->getFilePath());
     }
 }
 

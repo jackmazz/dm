@@ -3,6 +3,7 @@
 #include "config.hpp"
 #include "tile.hpp"
 #include "utils/asset.hpp"
+#include "utils/dmo-utils.hpp"
 #include "utils/cache.hpp"
 
 #include <cstddef>
@@ -49,7 +50,8 @@ namespace dm {
                 void removeActor(Actor *actor);
             
             /* converters */
-                std::string toString(void) const;
+                std::string toString(void) const override;
+                DMO toDMO(void) const override;
             
             /* logistics */
                 static Stage* load(const std::string& filePath);

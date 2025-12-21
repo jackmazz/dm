@@ -5,7 +5,7 @@
 #include <vector>
 
 namespace dm {
-    std::string trimString(const std::string& string) {
+    std::string stringTrim(const std::string& string) {
         std::size_t start = 0;
         std::size_t end = string.length();
         
@@ -23,7 +23,7 @@ namespace dm {
         return string.substr(start, end - start);
     }
 
-    std::vector<std::string> splitString(
+    std::vector<std::string> stringSplit(
         const std::string& string,
         const std::string& delimiter,
         std::size_t maxSplits

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "utils/dmo-utils.hpp"
+
 #include <cstddef>
 #include <string>
 
@@ -33,11 +35,15 @@ namespace dm {
                 void setName(const std::string& name);
             
                 void setPriority(std::size_t priority);
+            
+            /* converters */
+                virtual std::string toString(void) const;
+                virtual DMO toDMO(void) const;
         
         private:            
             /* members */
                 unsigned long _id;      // unique id
-                std::string _filePath;  // path to load & unload
+                std::string _filePath;  // path to read & write
                 std::string _name;      // display name
                 
                 std::size_t _priority;  // #of stores until this entry is removed
