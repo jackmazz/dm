@@ -1,16 +1,15 @@
 [ACTORS]
-1, ../assets/actors/demo-actor-1.dmo
 
 [MARKERS]
 ==========
-|        |
-|        |
-|        |
-|        |
-|        |
-|        |
-|        |
-|        |
+#        #
+#        #
+#        #
+#        #
+#        #
+#        #
+#        #
+#        #
 ==========
 
 [MODIFIERS]
@@ -26,7 +25,7 @@ bffffffffb
 bbbbbbbbbb
 
 [PROPERTIES]
-id = 1
-name = demo-stage-1
+id = 2
+name = demo-stage-2
 row-count = 10
 column-count = 10

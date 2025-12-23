@@ -1,11 +1,10 @@
-#include "utils/dmo.hpp"
+#include "utils/schema.hpp"
 #include "utils/strings.hpp"
 
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace dm {
@@ -14,36 +13,27 @@ namespace dm {
 // | ENCODING & DECODING |
 // =======================
 
-    void DMO::decode(const std::string& string) {
+    Schema Schema::decode(const std::string& string) {
+        Schema schema;
+    
         std::istringstream stream(string);
-        this->_input(stream);
+        schema._input(stream);
+        
+        return schema;
     }
     
-    std::string DMO::encode() {
-        std::string string;
-        std::string newLine;
-        for (const DMO::Section& section : *this) {
-            // separate rows using a newline
-            string += newLine;
-            newLine = "\n\n";
-            
-            // append the header
-            string += section.first;
-            
-            // append each entry
-            for (std::string entry : section.second) {
-                string += "\n" + entry;
-            }
-        }
+    std::string Schema::encode(const Schema& schema) {
+        std::ostringstream stream; 
+        schema._output(stream);
         
-        return string;
+        return stream.str();
     }
 
 // ====================================================================================================
 // | LOGISTICS |
 // =============
 
-    bool DMO::read(const std::string& filePath) {
+    bool Schema::read(const std::string& filePath) {
         // attempt to open the file
         std::ifstream file(filePath);
         if (!file.is_open()) {
@@ -61,7 +51,7 @@ namespace dm {
         return true;
     }
     
-    bool DMO::write(const std::string& filePath) {
+    bool Schema::write(const std::string& filePath) const {
         // attempt to open the file
         std::ofstream file(filePath);
         if (!file.is_open()) {
@@ -86,10 +76,7 @@ namespace dm {
         return true;
     }
     
-    void DMO::_input(std::istream& stream) {
-        // remove all sections
-        this->clear();
-    
+    void Schema::_input(std::istream& stream) {
         bool awaitingSection = true;
         std::string header;
         std::string line;
@@ -124,9 +111,9 @@ namespace dm {
         }
     }
     
-    void DMO::_output(std::ostream& stream) {
+    void Schema::_output(std::ostream& stream) const {
         std::string newLine;        
-        for (const DMO::Section& section : *this) {
+        for (const Section& section : *this) {
             // separate rows using a newline
             stream << newLine;
             newLine = "\n\n";

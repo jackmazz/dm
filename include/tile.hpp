@@ -30,7 +30,7 @@ namespace dm {
                     char modifier
                 );
                 
-                ~Tile(void);
+                ~Tile(void) = default;
             
             /* accessors */
                 const Stage* getParent(void) const;

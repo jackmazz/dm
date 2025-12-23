@@ -92,7 +92,7 @@ namespace dm::strings {
         return splits;
     }
     
-    std::vector<std::vector<std::string>> parseDSV (
+    std::vector<std::vector<std::string>> parseDsv (
         std::vector<std::string> strings,
         const std::string& delimiter,
         std::size_t requiredValues

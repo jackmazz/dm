@@ -3,7 +3,7 @@
 #include "tile.hpp"
 #include "utils/asset.hpp"
 #include "utils/cache.hpp"
-#include "utils/dmo.hpp"
+#include "utils/schema.hpp"
 #include "utils/strings.hpp"
 
 #include <cstddef>
@@ -75,8 +75,6 @@ namespace dm {
             }
         }
     }
-    
-    Stage::~Stage(void) {}
 
 // ====================================================================================================
 // | ACCESSORS |
@@ -152,8 +150,8 @@ namespace dm {
         return string;
     }
     
-    DMO Stage::toDMO(void) const {
-        DMO dmo;
+    Schema Stage::toSchema(void) const {
+        Schema schema;
         std::vector<std::string> properties;
         std::vector<std::string> markers;
         std::vector<std::string> modifiers;
@@ -186,12 +184,12 @@ namespace dm {
         }
         
         // map headers to entries
-        dmo[_PROPERTIES_SECTION_HEADER] = properties;
-        dmo[_MARKERS_SECTION_HEADER] = markers;
-        dmo[_MODIFIERS_SECTION_HEADER] = modifiers;
-        dmo[_ACTORS_SECTION_HEADER] = actorInfo;
+        schema[_PROPERTIES_SECTION_HEADER] = properties;
+        schema[_MARKERS_SECTION_HEADER] = markers;
+        schema[_MODIFIERS_SECTION_HEADER] = modifiers;
+        schema[_ACTORS_SECTION_HEADER] = actorInfo;
         
-        return dmo;
+        return schema;
     }
     
 // ====================================================================================================
@@ -201,9 +199,9 @@ namespace dm {
     Cache<Stage, STAGE_CACHE_CAP> Stage::_cache;
 
     Stage* Stage::load(const std::string& filePath) {
-        // attempt to read into a dmo
-        DMO dmo;
-        if (!dmo.read(filePath)) {
+        // attempt to read into a schema
+        Schema schema;
+        if (!schema.read(filePath)) {
             return nullptr;
         }
         
@@ -215,7 +213,7 @@ namespace dm {
         std::string modifiers = "";
         std::vector<std::pair<unsigned long, std::string>> actorInfo;
         
-        for (const DMO::Section& section : dmo) {        
+        for (const Schema::Section& section : schema) {        
             // process the properties section
             if (section.first == _PROPERTIES_SECTION_HEADER) {
                 std::unordered_map<
@@ -259,7 +257,7 @@ namespace dm {
                 std::vector<
                     std::vector<std::string>
                 > infoEntries
-                    = strings::parseDSV(section.second, ",", 2);
+                    = strings::parseDsv(section.second, ",", 2);
             
                 for (const std::vector<std::string>& info : infoEntries) {
                     // attempt to parse the actor information

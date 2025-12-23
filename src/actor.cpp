@@ -3,7 +3,7 @@
 #include "tile.hpp"
 #include "utils/asset.hpp"
 #include "utils/cache.hpp"
-#include "utils/dmo.hpp"
+#include "utils/schema.hpp"
 #include "utils/strings.hpp"
 
 #include <cstddef>
@@ -40,8 +40,6 @@ namespace dm {
         this->_tile = nullptr;
         this->setMarker(marker);
     }
-    
-    Actor::~Actor(void) {}
     
 // ====================================================================================================
 // | ACCESSORS |
@@ -122,8 +120,8 @@ namespace dm {
         return std::string(1, this->getMarker());
     }
     
-    DMO Actor::toDMO(void) const {
-        DMO dmo;
+    Schema Actor::toSchema(void) const {
+        Schema schema;
         std::vector<std::string> properties;
         
         // append properties
@@ -152,9 +150,9 @@ namespace dm {
         }
         
         // map headers to entries
-        dmo[_PROPERTIES_SECTION_HEADER] = properties;
+        schema[_PROPERTIES_SECTION_HEADER] = properties;
         
-        return dmo;
+        return schema;
     }
     
 // ====================================================================================================
@@ -164,9 +162,9 @@ namespace dm {
     Cache<Actor, ACTOR_CACHE_CAP> Actor::_cache;
     
     Actor* Actor::load(const std::string& filePath) {
-        // attempt to read into a dmo
-        DMO dmo;
-        if (!dmo.read(filePath)) {
+        // attempt to read into a schema
+        Schema schema;
+        if (!schema.read(filePath)) {
             return nullptr;
         }
         
@@ -175,7 +173,7 @@ namespace dm {
         std::string name;
         char marker;
         
-        for (const DMO::Section& section : dmo) {
+        for (const Schema::Section& section : schema) {
             // process the properties section
             if (section.first == _PROPERTIES_SECTION_HEADER) {
                 std::unordered_map<

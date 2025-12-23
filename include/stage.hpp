@@ -3,8 +3,8 @@
 #include "config.hpp"
 #include "tile.hpp"
 #include "utils/asset.hpp"
-#include "utils/dmo.hpp"
 #include "utils/cache.hpp"
+#include "utils/schema.hpp"
 
 #include <cstddef>
 #include <set>
@@ -34,7 +34,7 @@ namespace dm {
                     const std::string& modifiers
                 );
                 
-                ~Stage(void);
+                ~Stage(void) = default;
             
             /* accessors */                
                 std::size_t getSize(void) const;
@@ -51,7 +51,7 @@ namespace dm {
             
             /* converters */
                 std::string toString(void) const override;
-                DMO toDMO(void) const override;
+                Schema toSchema(void) const override;
             
             /* logistics */
                 static Stage* load(const std::string& filePath);

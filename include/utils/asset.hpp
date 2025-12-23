@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils/dmo.hpp"
+#include "utils/schema.hpp"
 
 #include <cstddef>
 #include <string>
@@ -22,7 +22,7 @@ namespace dm {
                     const std::string& name
                 );
                 
-                virtual ~Asset(void) = 0;
+                virtual ~Asset(void) = default;
             
              /* accessors */
                 unsigned long getId(void) const;
@@ -41,7 +41,7 @@ namespace dm {
             
             /* converters */
                 virtual std::string toString(void) const = 0;
-                virtual DMO toDMO(void) const = 0;
+                virtual Schema toSchema(void) const = 0;
             
             /* logistics */
                 bool save(void) const;

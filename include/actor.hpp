@@ -3,8 +3,8 @@
 #include "config.hpp"
 #include "tile.hpp"
 #include "utils/asset.hpp"
-#include "utils/dmo.hpp"
 #include "utils/cache.hpp"
+#include "utils/schema.hpp"
 
 #include <string>
 
@@ -26,7 +26,7 @@ namespace dm {
                     char marker
                 );
                 
-                ~Actor(void);
+                ~Actor(void) = default;
             
             /* accessors */                
                 char getMarker(void) const;
@@ -43,7 +43,7 @@ namespace dm {
             
             /* converters */
                 std::string toString(void) const override;
-                DMO toDMO(void) const override;
+                Schema toSchema(void) const override;
             
             /* logistics */
                 static Actor* load(const std::string& filePath);

@@ -36,8 +36,6 @@ namespace dm {
         this->setMarker(marker);
         this->setModifier(modifier);
     }
-    
-    Tile::~Tile(void) {}
 
 // ====================================================================================================
 // | ACCESSORS |

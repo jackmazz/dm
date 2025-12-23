@@ -1,5 +1,4 @@
 #include "utils/asset.hpp"
-#include "utils/dmo.hpp"
 
 #include <cstddef>
 #include <string>
@@ -30,8 +29,6 @@ namespace dm {
         this->setName(name);
         this->setPriority(0);
     }
-    
-    Asset::~Asset(void) {}
 
 // ====================================================================================================
 // | ACCESSORS |
@@ -82,7 +79,7 @@ namespace dm {
 // =============
     
     bool Asset::save(void) const {
-        return this->toDMO().write(this->getFilePath());
+        return this->toSchema().write(this->getFilePath());
     }
 }
 

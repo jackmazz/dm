@@ -7,6 +7,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "utils/debug.hpp" // debug purposes
+
 namespace dm {
     template <typename T, std::size_t N>
     class Cache {
@@ -26,7 +28,8 @@ namespace dm {
         // ==============================
         
             Cache(void) {}
-            ~Cache(void) {}
+            
+            ~Cache(void) = default;
         
         public:
         // ============================================================================================
@@ -134,7 +137,7 @@ namespace dm {
         // =============
         
             template <typename... Args>
-            T* store(Args&&... args) {            
+            T* store(Args&&... args) { 
                 // find an asset to be overwritten
                 T* target = nullptr;
                 for (T& asset : this->_storage) {
@@ -195,7 +198,7 @@ namespace dm {
                 return target;
             }
             
-            bool remove(unsigned long id) {
+            bool remove(unsigned long id) {   
                 // find an active asset associated with the given id
                 T* target = this->find(id);
                 if (target == nullptr) {
@@ -210,7 +213,6 @@ namespace dm {
                     return false;
                 }
                 target->deactivate();
-                target->~T();
                 
                 // shift the queue
                 for (T& asset : this->_storage) {

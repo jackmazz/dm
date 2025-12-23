@@ -1,0 +1,31 @@
+[ACTORS]
+
+[MARKERS]
+==========
+|        |
+|        |
+|        |
+|        |
+|        |
+|        |
+|        |
+|        |
+==========
+
+[MODIFIERS]
+bbbbbbbbbb
+bffffffffb
+bffffffffb
+bffffffffb
+bffffffffb
+bffffffffb
+bffffffffb
+bffffffffb
+bffffffffb
+bbbbbbbbbb
+
+[PROPERTIES]
+id = 1
+name = demo-stage-1
+row-count = 10
+column-count = 10

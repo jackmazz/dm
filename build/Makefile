@@ -7,7 +7,7 @@ OBJS = $(OBJ_DIR)/stage.o
 OBJS += $(OBJ_DIR)/tile.o
 OBJS += $(OBJ_DIR)/actor.o
 OBJS += $(OBJ_DIR)/utils/asset.o
-OBJS += $(OBJ_DIR)/utils/dmo.o
+OBJS += $(OBJ_DIR)/utils/schema.o
 OBJS += $(OBJ_DIR)/utils/strings.o
 
 CC := g++
