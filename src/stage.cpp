@@ -1,13 +1,12 @@
 #include "actor.hpp"
-#include "config.hpp"
 #include "stage.hpp"
 #include "tile.hpp"
+#include "utils/asset.hpp"
 #include "utils/cache.hpp"
-#include "utils/object.hpp"
-#include "utils/string-utils.hpp"
+#include "utils/schema.hpp"
+#include "utils/strings.hpp"
 
 #include <cstddef>
-#include <deque>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -32,7 +31,9 @@ namespace dm {
         const std::string& filePath,
         std::size_t rowCount, 
         std::size_t columnCount
-    ) : Stage(id, filePath, "", rowCount, columnCount, "", "") {}
+    ) 
+        : Stage(id, filePath, "", rowCount, columnCount, "", "") 
+    {}
     
     Stage::Stage(
         unsigned long id,
@@ -42,7 +43,9 @@ namespace dm {
         std::size_t columnCount,
         const std::string& markers,
         const std::string& modifiers
-    ) : Asset(id, filePath, name) {
+    )
+        : Asset(id, filePath, name) 
+    {
         this->_rowCount = rowCount;
         this->_columnCount = columnCount;
         
@@ -72,8 +75,6 @@ namespace dm {
             }
         }
     }
-    
-    Stage::~Stage(void) {}
 
 // ====================================================================================================
 // | ACCESSORS |
@@ -122,12 +123,10 @@ namespace dm {
     }
     
     void Stage::removeActor(Actor *actor) {
-        std::pair<unsigned long, std::string> info(
+        this->_actorInfo.erase(std::make_pair(
             actor->getId(), 
             actor->getFilePath()
-        );
-        
-        this->_actorInfo.erase(info);
+        ));
     }
     
 // ====================================================================================================
@@ -136,18 +135,61 @@ namespace dm {
 
     std::string Stage::toString(void) const {
         std::string string;
+        std::string newLine;
+        
         for (std::size_t i = 0; i < this->getRowCount(); i++) {
+            // separate rows using a newline
+            string += newLine;
+            newLine = "\n";
+            
             for (std::size_t j = 0; j < this->getColumnCount(); j++) {
                 string += this->getTile(i, j)->toString();
-            }
-            
-            // separate rows using a newline
-            if (i < this->getRowCount()-1) {
-                string += "\n";
             }
         }
         
         return string;
+    }
+    
+    Schema Stage::toSchema(void) const {
+        Schema schema;
+        std::vector<std::string> properties;
+        std::vector<std::string> markers;
+        std::vector<std::string> modifiers;
+        std::vector<std::string> actorInfo;
+        
+        // append properties
+        properties.push_back("id = " + std::to_string(this->getId()));
+        properties.push_back("name = " + this->getName());
+        properties.push_back("row-count = " + std::to_string(this->getRowCount()));
+        properties.push_back("column-count = " + std::to_string(this->getColumnCount()));
+        
+        // append each row of markers & modifiers
+        for (std::size_t i = 0; i < this->getRowCount(); i++) {
+            std::string markerRow;
+            std::string modifierRow;
+        
+            for (std::size_t j = 0; j < this->getColumnCount(); j++) {
+                const Tile* tile = this->getTile(i, j);
+                markerRow += std::string(1, tile->getMarker());
+                modifierRow += std::string(1, tile->getModifier());
+            }
+            
+            markers.push_back(markerRow);
+            modifiers.push_back(modifierRow);
+        }
+        
+        // append each row of actor info
+        for (std::pair<unsigned long, std::string> info : this->_actorInfo) {
+            actorInfo.push_back(std::to_string(info.first) + ", " + info.second);
+        }
+        
+        // map headers to entries
+        schema[_PROPERTIES_SECTION_HEADER] = properties;
+        schema[_MARKERS_SECTION_HEADER] = markers;
+        schema[_MODIFIERS_SECTION_HEADER] = modifiers;
+        schema[_ACTORS_SECTION_HEADER] = actorInfo;
+        
+        return schema;
     }
     
 // ====================================================================================================
@@ -157,9 +199,9 @@ namespace dm {
     Cache<Stage, STAGE_CACHE_CAP> Stage::_cache;
 
     Stage* Stage::load(const std::string& filePath) {
-        // attempt to read into an object
-        Object object;
-        if (!object.read(filePath)) {
+        // attempt to read into a schema
+        Schema schema;
+        if (!schema.read(filePath)) {
             return nullptr;
         }
         
@@ -171,23 +213,14 @@ namespace dm {
         std::string modifiers = "";
         std::vector<std::pair<unsigned long, std::string>> actorInfo;
         
-        for (const ObjectSection& section : object) {
-            const std::string& header = section.first;
-            const std::vector<std::string>& entries = section.second;
-        
+        for (const Schema::Section& section : schema) {        
             // process the properties section
-            if (header == _PROPERTIES_SECTION_HEADER) {
-                std::unordered_map<std::string, std::string> properties;
-                for (const std::string& entry : entries) {
-                    std::vector<std::string> split = splitString(entry, "=", 2);
-                    if (split.size() != 2) {
-                        continue;
-                    }
-                    
-                    std::string key = trimString(split[0]);
-                    std::string value = trimString(split[1]);
-                    properties[key] = value;
-                }
+            if (section.first == _PROPERTIES_SECTION_HEADER) {
+                std::unordered_map<
+                    std::string, 
+                    std::string
+                > properties
+                    = strings::parseIni(section.second, "=");
                 
                 // attempt to parse the loaded properties
                 try {
@@ -206,32 +239,31 @@ namespace dm {
             }
             
             // process the markers section
-            else if (header == _MARKERS_SECTION_HEADER) {
-                for (const std::string& entry: entries) {
+            else if (section.first == _MARKERS_SECTION_HEADER) {
+                for (const std::string& entry: section.second) {
                     markers += entry;
                 }
             }
             
             // process the modifers section
-            else if (header == _MODIFIERS_SECTION_HEADER) {
-                for (const std::string& entry: entries) {
+            else if (section.first == _MODIFIERS_SECTION_HEADER) {
+                for (const std::string& entry: section.second) {
                     modifiers += entry;
                 }
             }
             
             // process the actor information section
-            else if (header == _ACTORS_SECTION_HEADER) {
-                for (const std::string& entry: entries) {
-                    std::vector<std::string> split = splitString(entry, ",", 2);
-                    if (split.size() != 2) {
-                        continue;
-                    }
-                    
+            else if (section.first == _ACTORS_SECTION_HEADER) {
+                std::vector<
+                    std::vector<std::string>
+                > infoEntries
+                    = strings::parseDsv(section.second, ",", 2);
+            
+                for (const std::vector<std::string>& info : infoEntries) {
                     // attempt to parse the actor information
                     try {
-                        unsigned long id = stol(trimString(split[0]));
-                        std::string filePath = trimString(split[1]);
-                        
+                        unsigned long id = stol(strings::trim(info[0]));
+                        std::string filePath = strings::trim(info[1]);
                         actorInfo.emplace_back(id, filePath);
                     }
                     
@@ -243,12 +275,7 @@ namespace dm {
             }
         }
         
-        // unload a stage if the cache exceeds it's capacity
-        if (Stage::_cache.isFull()) {
-            Stage::unload(Stage::_cache.getFront());
-        }
-        
-        // store this stage
+        // attempt to store this stage
         Stage* stage = Stage::_cache.store(
             id,
             filePath,
@@ -258,6 +285,9 @@ namespace dm {
             markers,
             modifiers
         );
+        if (stage == nullptr) {
+            return nullptr;
+        }
         
         for (std::pair<unsigned long, std::string> pair : actorInfo) {
             // attempt to select the actor, load if necessary
@@ -279,51 +309,8 @@ namespace dm {
         return Stage::_cache.select(id);
     }
     
-    bool Stage::unload(Stage* stage) {
-        if (stage == nullptr) {
-            return false;
-        }
-    
-        Object object;
-        std::vector<std::string> properties;
-        std::vector<std::string> markers;
-        std::vector<std::string> modifiers;
-        std::vector<std::string> actorInfo;
-        
-        // append properties
-        properties.push_back("id = " + std::to_string(stage->getId()));
-        properties.push_back("name = " + stage->getName());
-        properties.push_back("row-count = " + std::to_string(stage->getRowCount()));
-        properties.push_back("column-count = " + std::to_string(stage->getColumnCount()));
-        
-        // append each row of markers & modifiers
-        for (std::size_t i = 0; i < stage->getRowCount(); i++) {
-            std::string markerRow;
-            std::string modifierRow;
-        
-            for (std::size_t j = 0; j < stage->getColumnCount(); j++) {
-                Tile* tile = stage->getTile(i, j);
-                markerRow += std::string(1, tile->getMarker());
-                modifierRow += std::string(1, tile->getModifier());
-            }
-            
-            markers.push_back(markerRow);
-            modifiers.push_back(modifierRow);
-        }
-        
-        // append each row of actor info
-        for (std::pair<unsigned long, std::string> info : stage->_actorInfo) {
-            actorInfo.push_back(std::to_string(info.first) + ", " + info.second);
-        }
-        
-        // map headers to entries
-        object[_PROPERTIES_SECTION_HEADER] = properties;
-        object[_MARKERS_SECTION_HEADER] = markers;
-        object[_MODIFIERS_SECTION_HEADER] = modifiers;
-        object[_ACTORS_SECTION_HEADER] = actorInfo;
-        
-        // write the object, return whether the write was successful
-        return object.write(stage->getFilePath());
+    bool Stage::unload(unsigned long id) {
+        return Stage::_cache.remove(id);
     }
 }
 

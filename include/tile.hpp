@@ -30,7 +30,7 @@ namespace dm {
                     char modifier
                 );
                 
-                ~Tile(void);
+                ~Tile(void) = default;
             
             /* accessors */
                 const Stage* getParent(void) const;
@@ -51,8 +51,7 @@ namespace dm {
                 void setMarker(char marker);
                 void setModifier(char modifer);
                 
-                void setActor(Actor* actor);
-                void setActor(Actor* actor, bool transit);
+                void setActor(Actor* actor, bool transit=true);
             
             /* converters */
                 std::string toString(void) const;

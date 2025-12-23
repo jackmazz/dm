@@ -4,6 +4,7 @@
 #include "tile.hpp"
 #include "utils/asset.hpp"
 #include "utils/cache.hpp"
+#include "utils/schema.hpp"
 
 #include <string>
 
@@ -25,7 +26,7 @@ namespace dm {
                     char marker
                 );
                 
-                ~Actor(void);
+                ~Actor(void) = default;
             
             /* accessors */                
                 char getMarker(void) const;
@@ -41,12 +42,13 @@ namespace dm {
                 void setMarker(char marker);
             
             /* converters */
-                std::string toString(void) const;
+                std::string toString(void) const override;
+                Schema toSchema(void) const override;
             
             /* logistics */
                 static Actor* load(const std::string& filePath);
                 static Actor* select(unsigned long id);
-                static bool unload(Actor* actor);
+                static bool unload(unsigned long id);
         
         private:
             /* members */

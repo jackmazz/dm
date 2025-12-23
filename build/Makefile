@@ -7,8 +7,8 @@ OBJS = $(OBJ_DIR)/stage.o
 OBJS += $(OBJ_DIR)/tile.o
 OBJS += $(OBJ_DIR)/actor.o
 OBJS += $(OBJ_DIR)/utils/asset.o
-OBJS += $(OBJ_DIR)/utils/object.o
-OBJS += $(OBJ_DIR)/utils/string-utils.o
+OBJS += $(OBJ_DIR)/utils/schema.o
+OBJS += $(OBJ_DIR)/utils/strings.o
 
 CC := g++
 CFLAGS := -Wall -Wextra -Werror -I$(INC_DIR)

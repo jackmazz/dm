@@ -1,13 +1,12 @@
 #include "actor.hpp"
-#include "config.hpp"
 #include "stage.hpp"
 #include "tile.hpp"
+#include "utils/asset.hpp"
 #include "utils/cache.hpp"
-#include "utils/object.hpp"
-#include "utils/string-utils.hpp"
+#include "utils/schema.hpp"
+#include "utils/strings.hpp"
 
 #include <cstddef>
-#include <deque>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -26,19 +25,21 @@ namespace dm {
     Actor::Actor (
         unsigned long id,
         const std::string& filePath
-    ) : Actor(id, filePath, "", '\0') {}
+    ) 
+        : Actor(id, filePath, "", '\0') 
+    {}
     
     Actor::Actor (
         unsigned long id,
         const std::string& filePath,
         const std::string& name,
         char marker
-    ) : Asset(id, filePath, name) {
+    ) 
+        : Asset(id, filePath, name) 
+    {
         this->_tile = nullptr;
         this->setMarker(marker);
     }
-    
-    Actor::~Actor(void) {}
     
 // ====================================================================================================
 // | ACCESSORS |
@@ -80,9 +81,9 @@ namespace dm {
         Tile* prevTile = this->getTile();
         bool transit = (
             tile != prevTile
-        ) && ((
+        && (
             (tile == nullptr) != (prevTile == nullptr)
-        ) || (
+            ||
             tile->getParent() != prevTile->getParent()
         ));
         
@@ -119,6 +120,41 @@ namespace dm {
         return std::string(1, this->getMarker());
     }
     
+    Schema Actor::toSchema(void) const {
+        Schema schema;
+        std::vector<std::string> properties;
+        
+        // append properties
+        properties.push_back("id = " + std::to_string(this->getId()));
+        properties.push_back("name = " + this->getName());
+        properties.push_back("marker = " + std::string(1, this->getMarker()));
+        if (this->isPlaced()) {
+            properties.push_back("stage-id = " + std::to_string(
+                this
+                ->getTile()
+                ->getParent()
+                ->getId()
+            ));
+            
+            properties.push_back("row = " + std::to_string(
+                this
+                ->getTile()
+                ->getRow()
+            ));
+            
+            properties.push_back("column = " + std::to_string(
+                this
+                ->getTile()
+                ->getColumn()
+            ));
+        }
+        
+        // map headers to entries
+        schema[_PROPERTIES_SECTION_HEADER] = properties;
+        
+        return schema;
+    }
+    
 // ====================================================================================================
 // | LOGISTICS |
 // =============
@@ -126,9 +162,9 @@ namespace dm {
     Cache<Actor, ACTOR_CACHE_CAP> Actor::_cache;
     
     Actor* Actor::load(const std::string& filePath) {
-        // attempt to read into an object
-        Object object;
-        if (!object.read(filePath)) {
+        // attempt to read into a schema
+        Schema schema;
+        if (!schema.read(filePath)) {
             return nullptr;
         }
         
@@ -137,23 +173,13 @@ namespace dm {
         std::string name;
         char marker;
         
-        for (const ObjectSection& section : object) {
-            const std::string& header = section.first;
-            const std::vector<std::string>& entries = section.second;
-        
+        for (const Schema::Section& section : schema) {
             // process the properties section
-            if (header == _PROPERTIES_SECTION_HEADER) {
-                std::unordered_map<std::string, std::string> properties;
-                for (const std::string& entry : entries) {
-                    std::vector<std::string> split = splitString(entry, "=", 2);
-                    if (split.size() != 2) {
-                        continue;
-                    }
-                    
-                    std::string key = trimString(split[0]);
-                    std::string value = trimString(split[1]);
-                    properties[key] = value;
-                }
+            if (section.first == _PROPERTIES_SECTION_HEADER) {
+                std::unordered_map<
+                    std::string, 
+                    std::string
+                > properties = strings::parseIni(section.second, "=");
                 
                 // attempt to parse the loaded properties
                 try {
@@ -188,18 +214,18 @@ namespace dm {
             }
         }
         
-        // unload an actor if the cache exceeds it's capacity
-        if (Actor::_cache.isFull()) {
-            Actor::unload(Actor::_cache.getFront());
-        }
-        
-        // store the actor
+        // attempt to store the actor
         Actor* actor = Actor::_cache.store(
             id,
             filePath,
             name,
             marker
         );
+        if (actor == nullptr) {
+            return nullptr;
+        }
+        
+        // place the actor
         actor->setTile(tile);
         
         return actor;
@@ -209,47 +235,8 @@ namespace dm {
         return Actor::_cache.select(id);
     }
     
-    bool Actor::unload(Actor* actor) {
-        if (actor == nullptr) {
-            return false;
-        }
-    
-        Object object;
-        std::vector<std::string> properties;
-        
-        // append properties
-        properties.push_back("id = " + std::to_string(actor->getId()));
-        properties.push_back("name = " + actor->getName());
-        properties.push_back("marker = " + std::string(1, actor->getMarker()));
-        if (actor->isPlaced()) {
-            properties.push_back("stage-id = " + std::to_string(
-                actor
-                ->getTile()
-                ->getParent()
-                ->getId()
-            ));
-            
-            properties.push_back("row = " + std::to_string(
-                actor
-                ->getTile()
-                ->getRow()
-            ));
-            
-            properties.push_back("column = " + std::to_string(
-                actor
-                ->getTile()
-                ->getColumn()
-            ));
-        }
-        
-        // map headers to entries
-        object[_PROPERTIES_SECTION_HEADER] = properties;
-        
-        // remove the actor
-        actor->setTile(nullptr, false);
-        
-        // write the object, return whether the write was successful
-        return object.write(actor->getFilePath());
+    bool Actor::unload(unsigned long id) {
+        return Actor::_cache.remove(id);
     }
 }
 

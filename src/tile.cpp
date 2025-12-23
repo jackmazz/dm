@@ -17,7 +17,9 @@ namespace dm {
         Stage* parent,
         std::size_t row,
         std::size_t column
-    ) : Tile(parent, row, column, '\0', DM_TILE_MODIFIER_FLOOR) {}
+    ) 
+        : Tile(parent, row, column, '\0', DM_TILE_MODIFIER_FLOOR)
+    {}
     
     Tile::Tile(
         Stage* parent,
@@ -34,8 +36,6 @@ namespace dm {
         this->setMarker(marker);
         this->setModifier(modifier);
     }
-    
-    Tile::~Tile(void) {}
 
 // ====================================================================================================
 // | ACCESSORS |
@@ -95,10 +95,6 @@ namespace dm {
     
     void Tile::setModifier(char modifier) {
         this->_modifier = modifier;
-    }
-    
-    void Tile::setActor(Actor* actor) {
-        this->setActor(actor, true);
     }
     
     void Tile::setActor(Actor* actor, bool transit) {

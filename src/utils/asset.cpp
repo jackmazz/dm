@@ -14,7 +14,9 @@ namespace dm {
     Asset::Asset(
         unsigned long id, 
         const std::string& filePath
-    ) : Asset(id, filePath, "") {}
+    ) 
+        : Asset(id, filePath, "")
+    {}
     
     Asset::Asset(
         unsigned long id, 
@@ -27,8 +29,6 @@ namespace dm {
         this->setName(name);
         this->setPriority(0);
     }
-    
-    Asset::~Asset(void) {}
 
 // ====================================================================================================
 // | ACCESSORS |
@@ -49,6 +49,10 @@ namespace dm {
     std::size_t Asset::getPriority(void) const {
         return this->_priority;
     }
+    
+    bool Asset::isActive(void) const {
+        return this->getPriority() > 0;
+    }
 
 // ====================================================================================================
 // | MODIFIERS |
@@ -60,6 +64,22 @@ namespace dm {
 
     void Asset::setPriority(std::size_t priority) {
         this->_priority = priority;
+    }
+    
+    void Asset::shiftPriority(std::size_t shift) {
+        this->setPriority(this->getPriority() + shift);
+    }
+    
+    void Asset::deactivate(void) {
+        this->setPriority(0);
+    }
+    
+// ====================================================================================================
+// | LOGISTICS |
+// =============
+    
+    bool Asset::save(void) const {
+        return this->toSchema().write(this->getFilePath());
     }
 }
 

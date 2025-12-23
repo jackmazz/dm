@@ -4,6 +4,7 @@
 #include "tile.hpp"
 #include "utils/asset.hpp"
 #include "utils/cache.hpp"
+#include "utils/schema.hpp"
 
 #include <cstddef>
 #include <set>
@@ -33,7 +34,7 @@ namespace dm {
                     const std::string& modifiers
                 );
                 
-                ~Stage(void);
+                ~Stage(void) = default;
             
             /* accessors */                
                 std::size_t getSize(void) const;
@@ -49,12 +50,13 @@ namespace dm {
                 void removeActor(Actor *actor);
             
             /* converters */
-                std::string toString(void) const;
+                std::string toString(void) const override;
+                Schema toSchema(void) const override;
             
             /* logistics */
                 static Stage* load(const std::string& filePath);
                 static Stage* select(unsigned long id);
-                static bool unload(Stage* stage);
+                static bool unload(unsigned long id);
         
         private:        
             /* members */
