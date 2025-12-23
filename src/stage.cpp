@@ -1,10 +1,10 @@
 #include "actor.hpp"
-#include "config.hpp"
 #include "stage.hpp"
 #include "tile.hpp"
+#include "utils/asset.hpp"
 #include "utils/cache.hpp"
-#include "utils/dmo-utils.hpp"
-#include "utils/string-utils.hpp"
+#include "utils/dmo.hpp"
+#include "utils/strings.hpp"
 
 #include <cstddef>
 #include <stdexcept>
@@ -31,7 +31,9 @@ namespace dm {
         const std::string& filePath,
         std::size_t rowCount, 
         std::size_t columnCount
-    ) : Stage(id, filePath, "", rowCount, columnCount, "", "") {}
+    ) 
+        : Stage(id, filePath, "", rowCount, columnCount, "", "") 
+    {}
     
     Stage::Stage(
         unsigned long id,
@@ -41,7 +43,9 @@ namespace dm {
         std::size_t columnCount,
         const std::string& markers,
         const std::string& modifiers
-    ) : Asset(id, filePath, name) {
+    )
+        : Asset(id, filePath, name) 
+    {
         this->_rowCount = rowCount;
         this->_columnCount = columnCount;
         
@@ -156,18 +160,18 @@ namespace dm {
         std::vector<std::string> actorInfo;
         
         // append properties
-        properties.push_back("id = " + std::to_string(stage->getId()));
-        properties.push_back("name = " + stage->getName());
-        properties.push_back("row-count = " + std::to_string(stage->getRowCount()));
-        properties.push_back("column-count = " + std::to_string(stage->getColumnCount()));
+        properties.push_back("id = " + std::to_string(this->getId()));
+        properties.push_back("name = " + this->getName());
+        properties.push_back("row-count = " + std::to_string(this->getRowCount()));
+        properties.push_back("column-count = " + std::to_string(this->getColumnCount()));
         
         // append each row of markers & modifiers
-        for (std::size_t i = 0; i < stage->getRowCount(); i++) {
+        for (std::size_t i = 0; i < this->getRowCount(); i++) {
             std::string markerRow;
             std::string modifierRow;
         
-            for (std::size_t j = 0; j < stage->getColumnCount(); j++) {
-                Tile* tile = stage->getTile(i, j);
+            for (std::size_t j = 0; j < this->getColumnCount(); j++) {
+                const Tile* tile = this->getTile(i, j);
                 markerRow += std::string(1, tile->getMarker());
                 modifierRow += std::string(1, tile->getModifier());
             }
@@ -177,7 +181,7 @@ namespace dm {
         }
         
         // append each row of actor info
-        for (std::pair<unsigned long, std::string> info : stage->_actorInfo) {
+        for (std::pair<unsigned long, std::string> info : this->_actorInfo) {
             actorInfo.push_back(std::to_string(info.first) + ", " + info.second);
         }
         
@@ -199,7 +203,7 @@ namespace dm {
     Stage* Stage::load(const std::string& filePath) {
         // attempt to read into a dmo
         DMO dmo;
-        if (!dmoRead(filePath)) {
+        if (!dmo.read(filePath)) {
             return nullptr;
         }
         
@@ -211,23 +215,14 @@ namespace dm {
         std::string modifiers = "";
         std::vector<std::pair<unsigned long, std::string>> actorInfo;
         
-        for (const DMOSection& section : dmo) {
-            const std::string& header = section.first;
-            const std::vector<std::string>& entries = section.second;
-        
+        for (const DMO::Section& section : dmo) {        
             // process the properties section
-            if (header == _PROPERTIES_SECTION_HEADER) {
-                std::unordered_map<std::string, std::string> properties;
-                for (const std::string& entry : entries) {
-                    std::vector<std::string> split = splitString(entry, "=", 2);
-                    if (split.size() != 2) {
-                        continue;
-                    }
-                    
-                    std::string key = trimString(split[0]);
-                    std::string value = trimString(split[1]);
-                    properties[key] = value;
-                }
+            if (section.first == _PROPERTIES_SECTION_HEADER) {
+                std::unordered_map<
+                    std::string, 
+                    std::string
+                > properties
+                    = strings::parseIni(section.second, "=");
                 
                 // attempt to parse the loaded properties
                 try {
@@ -246,32 +241,31 @@ namespace dm {
             }
             
             // process the markers section
-            else if (header == _MARKERS_SECTION_HEADER) {
-                for (const std::string& entry: entries) {
+            else if (section.first == _MARKERS_SECTION_HEADER) {
+                for (const std::string& entry: section.second) {
                     markers += entry;
                 }
             }
             
             // process the modifers section
-            else if (header == _MODIFIERS_SECTION_HEADER) {
-                for (const std::string& entry: entries) {
+            else if (section.first == _MODIFIERS_SECTION_HEADER) {
+                for (const std::string& entry: section.second) {
                     modifiers += entry;
                 }
             }
             
             // process the actor information section
-            else if (header == _ACTORS_SECTION_HEADER) {
-                for (const std::string& entry: entries) {
-                    std::vector<std::string> split = splitString(entry, ",", 2);
-                    if (split.size() != 2) {
-                        continue;
-                    }
-                    
+            else if (section.first == _ACTORS_SECTION_HEADER) {
+                std::vector<
+                    std::vector<std::string>
+                > infoEntries
+                    = strings::parseDSV(section.second, ",", 2);
+            
+                for (const std::vector<std::string>& info : infoEntries) {
                     // attempt to parse the actor information
                     try {
-                        unsigned long id = stol(trimString(split[0]));
-                        std::string filePath = trimString(split[1]);
-                        
+                        unsigned long id = stol(strings::trim(info[0]));
+                        std::string filePath = strings::trim(info[1]);
                         actorInfo.emplace_back(id, filePath);
                     }
                     
@@ -283,12 +277,7 @@ namespace dm {
             }
         }
         
-        // unload a stage if the cache exceeds it's capacity
-        if (Stage::_cache.isFull()) {
-            Stage::unload(Stage::_cache.getFront());
-        }
-        
-        // store this stage
+        // attempt to store this stage
         Stage* stage = Stage::_cache.store(
             id,
             filePath,
@@ -298,6 +287,9 @@ namespace dm {
             markers,
             modifiers
         );
+        if (stage == nullptr) {
+            return nullptr;
+        }
         
         for (std::pair<unsigned long, std::string> pair : actorInfo) {
             // attempt to select the actor, load if necessary
@@ -319,16 +311,8 @@ namespace dm {
         return Stage::_cache.select(id);
     }
     
-    bool Stage::unload(Stage* stage) {
-        if (stage == nullptr) {
-            return false;
-        }
-        
-        // convert the stage to a DMO
-        DMO dmo = stage->toDMO();
-        
-        // write the dmo, return whether the write was successful
-        return dmoWrite(stage->getFilePath());
+    bool Stage::unload(unsigned long id) {
+        return Stage::_cache.remove(id);
     }
 }
 

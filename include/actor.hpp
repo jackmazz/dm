@@ -3,6 +3,7 @@
 #include "config.hpp"
 #include "tile.hpp"
 #include "utils/asset.hpp"
+#include "utils/dmo.hpp"
 #include "utils/cache.hpp"
 
 #include <string>
@@ -41,12 +42,13 @@ namespace dm {
                 void setMarker(char marker);
             
             /* converters */
-                std::string toString(void) const;
+                std::string toString(void) const override;
+                DMO toDMO(void) const override;
             
             /* logistics */
                 static Actor* load(const std::string& filePath);
                 static Actor* select(unsigned long id);
-                static bool unload(Actor* actor);
+                static bool unload(unsigned long id);
         
         private:
             /* members */

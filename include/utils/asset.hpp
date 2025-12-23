@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils/dmo-utils.hpp"
+#include "utils/dmo.hpp"
 
 #include <cstddef>
 #include <string>
@@ -22,7 +22,7 @@ namespace dm {
                     const std::string& name
                 );
                 
-                ~Asset(void);
+                virtual ~Asset(void) = 0;
             
              /* accessors */
                 unsigned long getId(void) const;
@@ -30,15 +30,21 @@ namespace dm {
                 std::string getName(void) const;
                 
                 std::size_t getPriority(void) const;
+                bool isActive(void) const;
             
             /* modifiers */
                 void setName(const std::string& name);
             
                 void setPriority(std::size_t priority);
+                void shiftPriority(std::size_t shift);
+                void deactivate(void);
             
             /* converters */
-                virtual std::string toString(void) const;
-                virtual DMO toDMO(void) const;
+                virtual std::string toString(void) const = 0;
+                virtual DMO toDMO(void) const = 0;
+            
+            /* logistics */
+                bool save(void) const;
         
         private:            
             /* members */

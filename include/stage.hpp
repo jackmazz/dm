@@ -3,7 +3,7 @@
 #include "config.hpp"
 #include "tile.hpp"
 #include "utils/asset.hpp"
-#include "utils/dmo-utils.hpp"
+#include "utils/dmo.hpp"
 #include "utils/cache.hpp"
 
 #include <cstddef>
@@ -56,7 +56,7 @@ namespace dm {
             /* logistics */
                 static Stage* load(const std::string& filePath);
                 static Stage* select(unsigned long id);
-                static bool unload(Stage* stage);
+                static bool unload(unsigned long id);
         
         private:        
             /* members */

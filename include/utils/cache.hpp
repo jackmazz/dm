@@ -14,20 +14,25 @@ namespace dm {
             std::is_base_of<Asset, T>::value, 
             "T must derive from Asset"
         );
-    
+        
+        static_assert(
+            N > 0,
+            "N must be greater than 0"
+        );
+        
         public:
-
         // ============================================================================================
         // | CONSTRUCTORS & DESTRUCTORS |
         // ==============================
-
+        
             Cache(void) {}
             ~Cache(void) {}
-
+        
+        public:
         // ============================================================================================
         // | ACCESSORS |
         // =============
-            
+        
             std::size_t getCapacity(void) const {
                 return this->_storage.size();
             }
@@ -35,8 +40,8 @@ namespace dm {
             std::size_t getLength(void) const {
                 // accumulate #of valid entries
                 std::size_t size = 0;
-                for (const T& entry : this->_storage) {
-                    if (entry.getPriority() > 0) {
+                for (const T& asset : this->_storage) {
+                    if (asset.isActive()) {
                         size++;
                     }
                 }
@@ -53,19 +58,21 @@ namespace dm {
             }
             
             const T* getFront(void) const {
-                // find the index of the minimum-priority entry
-                std::size_t index;
-                std::size_t minPriority = this->getCapacity();
-                for (std::size_t i = 0; i < this->getCapacity(); i++) {
-                    std::size_t priority = this->_storage[i].getPriority();
-                    if (priority < minPriority) {
-                        minPriority = priority;
-                        index = i;
+                // find the active minimum-priority asset
+                const T* front = nullptr;
+                for (const T& asset : this->_storage) {
+                    if (
+                        front == nullptr
+                    || (
+                        asset.isActive()
+                        &&
+                        asset.getPriority() < front.getPriority()
+                    )) {
+                        front = &asset;
                     }
                 }
                 
-                // return the minimum-priority entry
-                return &this->_storage[index];
+                return front;
             }
                     
             T* getFront(void) {
@@ -75,19 +82,22 @@ namespace dm {
             }
             
             const T* getBack(void) const {
-                // find the index of the maximum-priority entry
-                std::size_t index;
+                // find the active maximum-priority asset
+                const T* back = nullptr;
                 std::size_t maxPriority = 0;
-                for (std::size_t i = 0; i < this->getCapacity(); i++) {
-                    std::size_t priority = this->_storage[i].getPriority();
-                    if (priority > maxPriority) {
-                        maxPriority = priority;
-                        index = i;
+                for (const T& asset : this->_storage) {
+                    if (
+                        back == nullptr
+                    || (
+                        asset.isActive()
+                        &&
+                        asset.getPriority() > back.getPriority()
+                    )) {
+                        back = &asset;
                     }
                 }
                 
-                // return the maximum-priority entry
-                return &this->_storage[index];
+                return back;
             }
             
             T* getBack(void) {
@@ -96,11 +106,11 @@ namespace dm {
                 );
             }
             
-            const T* select(unsigned long id) const {
-                // find an element that was assigned the input id
-                for (const T& entry : this->_storage) {
-                    if (entry.getId() == id) {
-                        return &entry;
+            const T* find(unsigned long id) const {
+                // find an active asset associated with the given id
+                for (const T& asset : this->_storage) {
+                    if (asset.isActive() && asset.getId() == id) {
+                        return &asset;
                     }
                 }
                 
@@ -108,50 +118,120 @@ namespace dm {
                 return nullptr;
             }
              
-            T* select(unsigned long id) {
+            T* find(unsigned long id) {
                 return const_cast<T*>(
-                    static_cast<const Cache*>(this)->select(id)
+                    static_cast<const Cache*>(this)->find(id)
                 );
             }
             
             bool contains(unsigned long id) const {
-                return this->select(id) != nullptr;
+                return this->find(id) != nullptr;
             }
-
+        
+        public:
         // ============================================================================================
         // | MODIFIERS |
         // =============
-
+        
             template <typename... Args>
-            T* store(Args&&... args) {
-                // find the minimum-priority entry
-                T* front = this->getFront();
-                
-                // decrement the priorities of all valid entries
-                for (T& entry : this->_storage) {
-                    std::size_t priority = entry.getPriority();
-                    if (priority > 0) {
-                        entry.setPriority(priority-1);
+            T* store(Args&&... args) {            
+                // find an asset to be overwritten
+                T* target = nullptr;
+                for (T& asset : this->_storage) {
+                    if (
+                        target == nullptr
+                    ||
+                        asset.getPriority() < target->getPriority()
+                    ) {
+                        target = &asset;
                     }
                 }
                 
-                // destroy the minimum-priority entry
-                front->~T();
+                // try to clean up the target asset (if it is active)
+                if (target->isActive()) {
+                    if (!target->save()) {
+                        return nullptr;
+                    }
+                    target->deactivate();
+                    target->~T();
+                }
                 
-                // insert the new element
-                new (front) T(std::forward<Args>(args)...);
-                front->setPriority(this->getCapacity());
+                // shift the queue
+                for (T& asset : this->_storage) {
+                    if (asset.isActive()) {
+                        asset.shiftPriority(-1);
+                    }
+                }
                 
-                return front;
+                // insert the new asset
+                new (target) T(std::forward<Args>(args)...);
+                target->setPriority(this->getCapacity());
+                
+                return target;
             }
-                    
-        private:
+            
+            T* select(unsigned long id) {
+                // find an active asset associated with the given id
+                T* target = this->find(id);
+                if (target == nullptr) {
+                    return nullptr;
+                }
+                
+                // shift the queue
+                std::size_t targetPriority = target->getPriority();
+                for (T& asset : this->_storage) {
+                    if (
+                        asset.isActive() 
+                    &&
+                        asset.getPriority() > targetPriority
+                    ) {
+                        asset.shiftPriority(-1);
+                    }
+                }
+                
+                // renew the target's priority
+                target->setPriority(this->getCapacity());
+                
+                return target;
+            }
+            
+            bool remove(unsigned long id) {
+                // find an active asset associated with the given id
+                T* target = this->find(id);
+                if (target == nullptr) {
+                    return false;
+                }
+                
+                // remember the target's priority
+                std::size_t targetPriority = target->getPriority();
+                
+                // try to clean up the target asset
+                if (!target->save()) {
+                    return false;
+                }
+                target->deactivate();
+                target->~T();
+                
+                // shift the queue
+                for (T& asset : this->_storage) {
+                    if (
+                        asset.isActive() 
+                    &&
+                        asset.getPriority() > targetPriority
+                    ) {
+                        asset.shiftPriority(-1);
+                    }
+                }
+                
+                return true;
+            }
     
+        private:
         // ============================================================================================
         // | MEMBERS |
         // ===========
         
-            std::array<T, N> _storage;  // cache element storage
+            std::array<T, N> _storage;  // asset storage
     };
 }
 
