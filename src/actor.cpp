@@ -1,4 +1,11 @@
 #include "actor.hpp"
+#include "config.hpp"
+#include "stage.hpp"
+#include "tile.hpp"
+#include "utils/asset.hpp"
+#include "utils/cache.hpp"
+#include "utils/schema.hpp"
+#include "utils/strings.hpp"
 
 #include <cstddef>
 #include <stdexcept>
@@ -6,13 +13,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include "stage.hpp"
-#include "tile.hpp"
-#include "utils/asset.hpp"
-#include "utils/cache.hpp"
-#include "utils/schema.hpp"
-#include "utils/strings.hpp"
 
 #define _PROPERTIES_SECTION_HEADER "[PROPERTIES]"
 
@@ -44,7 +44,10 @@ namespace dm {
 // =============
 
     Actor::Contact Actor::getContact(void) const {
-        return std::make_pair(this->getId(), this->getFilePath());
+        return std::make_pair(
+            this->getId(), 
+            this->getFilePath()
+        );
     }
 
     char Actor::getMarker(void) const {
@@ -154,7 +157,7 @@ namespace dm {
 // | LOGISTICS |
 // =============
 
-    Cache<Actor, ACTOR_CACHE_CAP> Actor::_cache;
+    Cache<Actor, DM_ACTOR_CACHE_CAP> Actor::_cache;
 
     Actor* Actor::get(unsigned long id) {
         return Actor::_cache.get(id);
@@ -165,9 +168,11 @@ namespace dm {
     }
 
     Actor* Actor::load(const std::string& filePath) {
+        std::string fullPath = DM_ACTOR_DIR+"/" + filePath;
+    
         // attempt to read the schema
         Schema schema;
-        if (!schema.read(filePath)) {
+        if (!schema.read(fullPath)) {
             return nullptr;
         }
 
@@ -217,7 +222,7 @@ namespace dm {
 
         // attempt to store the actor
         Actor* actor = Actor::_cache.store(
-            id, filePath, name, 
+            id, fullPath, name, 
             marker
         );
         if (actor == nullptr) {

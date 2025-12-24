@@ -1,12 +1,11 @@
 #include "utils/schema.hpp"
+#include "utils/strings.hpp"
 
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include "utils/strings.hpp"
 
 namespace dm {
 

@@ -16,6 +16,8 @@ CLIBS := -lm
 
 dm: $(BIN_DIR)/main.exe
 
+test: $(BIN_DIR)/tests/test-$(TARGET).exe
+
 clean:
 	find $(OBJ_DIR) -type f -name "*.o" -delete
 	find $(BIN_DIR) -type f -name "*.exe" -delete

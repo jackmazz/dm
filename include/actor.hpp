@@ -1,13 +1,13 @@
 #pragma once
 
-#include <string>
-#include <utility>
-
 #include "config.hpp"
 #include "tile.hpp"
 #include "utils/asset.hpp"
 #include "utils/cache.hpp"
 #include "utils/schema.hpp"
+
+#include <string>
+#include <utility>
 
 namespace dm {
     class Actor : public Asset {
@@ -85,7 +85,7 @@ namespace dm {
         // | MEMBERS |
         // ===========
         
-            static Cache<Actor, ACTOR_CACHE_CAP> _cache; // actor storage
+            static Cache<Actor, DM_ACTOR_CACHE_CAP> _cache; // actor storage
 
             char _marker; // display character
 

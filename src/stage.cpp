@@ -1,4 +1,11 @@
+#include "actor.hpp"
+#include "config.hpp"
 #include "stage.hpp"
+#include "tile.hpp"
+#include "utils/asset.hpp"
+#include "utils/cache.hpp"
+#include "utils/schema.hpp"
+#include "utils/strings.hpp"
 
 #include <cstddef>
 #include <stdexcept>
@@ -6,13 +13,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include "actor.hpp"
-#include "tile.hpp"
-#include "utils/asset.hpp"
-#include "utils/cache.hpp"
-#include "utils/schema.hpp"
-#include "utils/strings.hpp"
 
 #define _PROPERTIES_SECTION_HEADER "[PROPERTIES]"
 #define _MARKERS_SECTION_HEADER "[MARKERS]"
@@ -231,7 +231,7 @@ namespace dm {
 // | LOGISTICS |
 // =============
 
-    Cache<Stage, STAGE_CACHE_CAP> Stage::_cache;
+    Cache<Stage, DM_STAGE_CACHE_CAP> Stage::_cache;
 
     Stage* Stage::get(unsigned long id) {
         return Stage::_cache.get(id);
@@ -242,9 +242,11 @@ namespace dm {
     }
 
     Stage* Stage::load(const std::string& filePath) {
+        std::string fullPath = DM_STAGE_DIR+"/" + filePath;
+    
         // attempt to read the schema
         Schema schema;
-        if (!schema.read(filePath)) {
+        if (!schema.read(fullPath)) {
             return nullptr;
         }
 
@@ -300,9 +302,9 @@ namespace dm {
                 for (const std::vector<std::string>& entry : rows) {
                     // attempt to parse the contact information
                     try {
-                        unsigned long id = stol(strings::trim(entry[0]));
-                        std::string filePath = strings::trim(entry[1]);
-                        contacts.emplace_back(id, filePath);
+                        unsigned long contactId = stol(strings::trim(entry[0]));
+                        std::string contactPath = strings::trim(entry[1]);
+                        contacts.emplace_back(contactId, contactPath);
                     }
 
                     // make sure invalid information doesn't cause a crash
@@ -315,7 +317,7 @@ namespace dm {
 
         // attempt to store this stage
         Stage* stage = Stage::_cache.store(
-            id, filePath, name, 
+            id, fullPath, name, 
             rowCount, columnCount, 
             markers, modifiers
         );

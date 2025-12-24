@@ -1,9 +1,9 @@
 #pragma once
 
+#include "utils/schema.hpp"
+
 #include <cstddef>
 #include <string>
-
-#include "utils/schema.hpp"
 
 namespace dm {
     class Asset {

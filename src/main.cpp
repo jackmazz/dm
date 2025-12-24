@@ -1,11 +1,11 @@
-#include <iostream>
-
 #include "actor.hpp"
 #include "stage.hpp"
 #include "tile.hpp"
 
+#include <iostream>
+
 int main() {
-    dm::Stage *stage = dm::Stage::load("../assets/stages/demo-stage-1.dms");
+    dm::Stage *stage = dm::Stage::load("demo-stage-1.dms");
     if (stage == nullptr) {
         std::cout << "Failed to load stage\n";
         return 1;

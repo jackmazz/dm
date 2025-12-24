@@ -1,11 +1,11 @@
 #pragma once
 
+#include "utils/asset.hpp"
+
 #include <array>
 #include <cstddef>
 #include <type_traits>
 #include <utility>
-
-#include "utils/asset.hpp"
 
 namespace dm {
     template <typename T, std::size_t N>

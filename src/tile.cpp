@@ -1,10 +1,9 @@
+#include "actor.hpp"
+#include "stage.hpp"
 #include "tile.hpp"
 
 #include <cstddef>
 #include <string>
-
-#include "actor.hpp"
-#include "stage.hpp"
 
 namespace dm {
 

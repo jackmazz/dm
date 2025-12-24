@@ -1,17 +1,17 @@
 #pragma once
 
-#include <cstddef>
-#include <set>
-#include <string>
-#include <utility>
-#include <vector>
-
 #include "actor.hpp"
 #include "config.hpp"
 #include "tile.hpp"
 #include "utils/asset.hpp"
 #include "utils/cache.hpp"
 #include "utils/schema.hpp"
+
+#include <cstddef>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace dm {
     class Stage : public Asset {
@@ -106,7 +106,7 @@ namespace dm {
         // | MEMBERS |
         // ===========
         
-            static Cache<Stage, STAGE_CACHE_CAP> _cache; // stage storage
+            static Cache<Stage, DM_STAGE_CACHE_CAP> _cache; // stage storage
 
             std::size_t _rowCount; // grid #of rows
             std::size_t _columnCount; // grid #of columns
