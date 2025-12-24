@@ -6,13 +6,17 @@
 #include <string>
 
 namespace dm {
+
+// ============================================================================================
+// | LOGGING |
+// ===========
     template <typename... Args>
     void debugPrint(double id, Args&&... args) {
         std::ostringstream stream;
-        
+
         stream << "debug-" << id;
         (stream << ... << args);
-        
+
         std::cout << stream.str() << "\n";
     }
 }

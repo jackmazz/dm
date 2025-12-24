@@ -12,61 +12,71 @@ namespace dm {
     class Stage;
 
     class Tile {
-        public:        
-            /* constructors & destructors */
-                Tile(void);
-                
-                Tile(
-                    Stage* parent,
-                    std::size_t row,
-                    std::size_t column
-                );
-                
-                Tile(
-                    Stage* parent,
-                    std::size_t row,
-                    std::size_t column,
-                    char marker,
-                    char modifier
-                );
-                
-                ~Tile(void) = default;
-            
-            /* accessors */
-                const Stage* getParent(void) const;
-                Stage* getParent(void);
-                
-                std::size_t getRow(void) const;
-                std::size_t getColumn(void) const;
-                          
-                char getMarker(void) const;
-                char getModifier(void) const;
-                bool isBlocked(void) const;
-                
-                const Actor* getActor(void) const;
-                Actor* getActor(void);
-                bool isOccupied(void) const;
-            
-            /* modifiers */
-                void setMarker(char marker);
-                void setModifier(char modifer);
-                
-                void setActor(Actor* actor, bool transit=true);
-            
-            /* converters */
-                std::string toString(void) const;
+    
+        public:
+        // ============================================================================================
+        // | CONSTRUCTORS & DESTRUCTORS |
+        // ==============================
         
+            Tile(void);
+
+            Tile(Stage* parent, std::size_t row, std::size_t column);
+
+            Tile(Stage* parent, std::size_t row, std::size_t column, char marker,
+                 char modifier);
+
+            ~Tile(void) = default;
+
+        public:
+        // ============================================================================================
+        // | ACCESSORS |
+        // =============
+        
+            const Stage* getParent(void) const;
+            Stage* getParent(void);
+
+            std::size_t getRow(void) const;
+            std::size_t getColumn(void) const;
+
+            char getMarker(void) const;
+            char getModifier(void) const;
+            bool isBlocked(void) const;
+
+            const Actor* getActor(void) const;
+            Actor* getActor(void);
+            bool isOccupied(void) const;
+
+        public:
+        // ============================================================================================
+        // | MODIFIERS |
+        // =============
+        
+            void setMarker(char marker);
+            void setModifier(char modifer);
+
+            void setActor(Actor* actor, bool transit = true);
+
+        public:
+        // ============================================================================================
+        // | CONVERTERS |
+        // ==============
+        
+            std::string toString(void) const;
+
         private:
-            /* members */
-                Stage* _parent;         // where the tile is stored
-                
-                std::size_t _row;       // row index of the tile
-                std::size_t _column;    // column index of the tile
-                
-                char _marker;           // display character
-                char _modifier;         // whether the tile is a floor, barrier, door, etc.
-                
-                Actor* _actor;          // actor occupying the tile
+        // ============================================================================================
+        // | MEMBERS |
+        // ===========
+        
+            Stage* _parent; // where the tile is stored
+
+            std::size_t _row; // row index of the tile
+            std::size_t _column; // column index of the tile
+
+            char _marker; // display character
+            char _modifier; // whether the tile is a floor, barrier, door, etc.
+
+            Actor* _actor; // actor occupying the tile
     };
 }
 

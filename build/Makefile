@@ -13,8 +13,13 @@ OBJS += $(OBJ_DIR)/utils/strings.o
 CC := g++
 CFLAGS := -Wall -Wextra -Werror -I$(INC_DIR)
 CLIBS := -lm
+CLANG := clang-format -i --style=file --verbose
 
 dm: $(BIN_DIR)/main.exe
+
+format:
+	find $(INC_DIR) -type f -name "*.hpp" -exec $(CLANG) {} +
+	find $(SRC_DIR) -type f -name "*.cpp" -exec $(CLANG) {} +
 
 clean:
 	find $(OBJ_DIR) -type f -name "*.o" -delete
