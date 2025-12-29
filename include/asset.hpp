@@ -4,15 +4,23 @@
 
 #include <cstddef>
 #include <string>
+#include <utility>
 
 namespace dm {
     class Asset {
-    
+        
+        // ========================================================================================
+        // | TYPES |
+        // =========
+        
         public:
-        // ====================================================================================================
+            using Contact = std::pair<unsigned long, std::string>;
+        
+        // ========================================================================================
         // | CONSTRUCTORS & DESTRUCTORS |
         // ==============================
         
+        public:
             Asset(void);
             
             Asset(
@@ -28,10 +36,12 @@ namespace dm {
             
             virtual ~Asset(void) = default;
         
-        public:
-        // ====================================================================================================
+        // ========================================================================================
         // | ACCESSORS |
         // =============
+        
+        public:
+            Asset::Contact getContact(void) const;
         
             unsigned long getId(void) const;
             std::string getFilePath(void) const;
@@ -40,42 +50,51 @@ namespace dm {
             std::size_t getPriority(void) const;
             bool isActive(void) const;
         
-        public:
-        // ====================================================================================================
+        // ========================================================================================
         // | MODIFIERS |
         // =============
         
+        public:
             void setName(const std::string& name);
             
             void setPriority(std::size_t priority);
             void shiftPriority(std::size_t shift);
             void deactivate(void);
         
-        public:
-        // ====================================================================================================
+        // ========================================================================================
         // | CONVERTERS |
         // ==============
         
+        public:
             virtual std::string toString(void) const = 0;
             virtual Schema toSchema(void) const = 0;
         
-        public:
-        // ====================================================================================================
+        // ========================================================================================
         // | LOGISTICS |
         // =============
         
+        public:
             bool save(void) const;
-
-        private:
-        // ====================================================================================================
+        
+        // ========================================================================================
         // | MEMBERS |
         // ===========
         
+        private:
             unsigned long _id; // unique id
             std::string _filePath; // path to read & write
             std::string _name; // display name
             
             std::size_t _priority; // #of stores until this entry is removed
     };
+    
+// ================================================================================================
+// | OPERATORS |
+// =============
+    
+    std::ostream& operator<<(
+        std::ostream& stream, 
+        const Asset& asset
+    );
 }
 

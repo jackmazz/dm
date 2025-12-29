@@ -1,29 +1,21 @@
 #pragma once
 
+#include "asset.hpp"
 #include "config.hpp"
 #include "tile.hpp"
-#include "utils/asset.hpp"
 #include "utils/cache.hpp"
 #include "utils/schema.hpp"
 
 #include <string>
-#include <utility>
 
 namespace dm {
     class Actor : public Asset {
-    
-        public:
-        // ============================================================================================
-        // | TYPES |
-        // =========
         
-            using Contact = std::pair<unsigned long, std::string>;
-        
-        public:
-        // ============================================================================================
+        // ========================================================================================
         // | CONSTRUCTORS & DESTRUCTORS |
         // ==============================
         
+        public:
             Actor(void);
 
             Actor(unsigned long id, const std::string& filePath);
@@ -36,43 +28,41 @@ namespace dm {
             );
 
             ~Actor(void) = default;
-
-        public:
-        // ============================================================================================
+        
+        // ========================================================================================
         // | ACCESSORS |
         // =============
         
-            Contact getContact(void) const;
-
+        public:
             char getMarker(void) const;
 
             const Tile* getTile(void) const;
             Tile* getTile(void);
             bool isPlaced(void) const;
-
-        public:
-        // ============================================================================================
+        
+        // ========================================================================================
         // | MODIFIERS |
         // =============
         
+        public:
             void setTile(Tile* tile);
             void setTile(Tile* tile, bool transit);
 
             void setMarker(char marker);
-
-        public:
-        // ============================================================================================
+        
+        // ========================================================================================
         // | CONVERTERS |
         // ==============
         
+        public:
             std::string toString(void) const override;
             Schema toSchema(void) const override;
-
-        public:
-        // ============================================================================================
+        
+        // ========================================================================================
         // | LOGISTICS |
         // =============
         
+        public:
             static Actor* get(unsigned long id);
             static bool contains(unsigned long id);
 
@@ -80,11 +70,11 @@ namespace dm {
             static Actor* select(unsigned long id);
             static bool unload(unsigned long id);
         
-        private:
-        // ============================================================================================
+        // ========================================================================================
         // | MEMBERS |
         // ===========
         
+         private:
             static Cache<Actor, DM_ACTOR_CACHE_CAP> _cache; // actor storage
 
             char _marker; // display character

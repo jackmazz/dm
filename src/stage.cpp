@@ -1,8 +1,8 @@
 #include "actor.hpp"
+#include "asset.hpp"
 #include "config.hpp"
 #include "stage.hpp"
 #include "tile.hpp"
-#include "utils/asset.hpp"
 #include "utils/cache.hpp"
 #include "utils/schema.hpp"
 #include "utils/strings.hpp"
@@ -21,7 +21,7 @@
 
 namespace dm {
 
-// ====================================================================================================
+// ================================================================================================
 // | CONSTRUCTORS & DESTRUCTORS |
 // ==============================
 
@@ -72,7 +72,7 @@ namespace dm {
         }
     }
 
-// ====================================================================================================
+// ================================================================================================
 // | ACCESSORS |
 // =============
 
@@ -111,7 +111,7 @@ namespace dm {
     std::vector<const Actor*> Stage::getActors(void) const {
         // accumulate all actors which are currently loaded
         std::vector<const Actor*> actors;
-        for (const Actor::Contact& contact : this->_contacts) {
+        for (const Asset::Contact& contact : this->_contacts) {
             const Actor* actor = Actor::get(contact.first);
             if (actor != nullptr) {
                 actors.push_back(actor);
@@ -124,7 +124,7 @@ namespace dm {
     std::vector<Actor*> Stage::getActors(void) {
         // accumulate all actors which are currently loaded
         std::vector<Actor*> actors;
-        for (const Actor::Contact& contact : this->_contacts) {
+        for (const Asset::Contact& contact : this->_contacts) {
             Actor* actor = Actor::get(contact.first);
             if (actor != nullptr) {
                 actors.push_back(actor);
@@ -134,21 +134,21 @@ namespace dm {
         return actors;
     }
 
-    std::vector<Actor::Contact> Stage::getContacts(void) const {
+    std::vector<Asset::Contact> Stage::getContacts(void) const {
         // accumulate all contact information
-        std::vector<Actor::Contact> contacts;
-        for (const Actor::Contact& contact : this->_contacts) {
+        std::vector<Asset::Contact> contacts;
+        for (const Asset::Contact& contact : this->_contacts) {
             contacts.push_back(contact);
         }
 
         return contacts;
     }
 
-// ====================================================================================================
+// ================================================================================================
 // | MODIFIERS |
 // =============
 
-    void Stage::addContact(const Actor::Contact& contact) {
+    void Stage::addContact(const Asset::Contact& contact) {
         this->_contacts.insert(contact);
     }
 
@@ -156,7 +156,7 @@ namespace dm {
         this->addContact(std::make_pair(id, filePath));
     }
 
-    void Stage::removeContact(const Actor::Contact& contact) {
+    void Stage::removeContact(const Asset::Contact& contact) {
         this->_contacts.erase(contact);
     }
 
@@ -164,7 +164,7 @@ namespace dm {
         this->removeContact(std::make_pair(id, filePath));
     }
 
-// ====================================================================================================
+// ================================================================================================
 // | CONVERTERS |
 // ==============
 
@@ -214,7 +214,7 @@ namespace dm {
         }
 
         // append each row of contact information
-        for (const Actor::Contact& contact : this->_contacts) {
+        for (const Asset::Contact& contact : this->_contacts) {
             contacts.push_back(std::to_string(contact.first) + ", " + contact.second);
         }
 
@@ -227,7 +227,7 @@ namespace dm {
         return schema;
     }
 
-// ====================================================================================================
+// ================================================================================================
 // | LOGISTICS |
 // =============
 
@@ -256,7 +256,7 @@ namespace dm {
         std::size_t columnCount;
         std::string markers = "";
         std::string modifiers = "";
-        std::vector<Actor::Contact> contacts;
+        std::vector<Asset::Contact> contacts;
 
         for (const Schema::Section& section : schema) {
             // process the properties section
@@ -342,7 +342,7 @@ namespace dm {
         return Stage::_cache.remove(id);
     }
 
-// ====================================================================================================
+// ================================================================================================
 // | UTILITIES |
 // =============
 

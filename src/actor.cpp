@@ -1,8 +1,8 @@
 #include "actor.hpp"
+#include "asset.hpp"
 #include "config.hpp"
 #include "stage.hpp"
 #include "tile.hpp"
-#include "utils/asset.hpp"
 #include "utils/cache.hpp"
 #include "utils/schema.hpp"
 #include "utils/strings.hpp"
@@ -11,14 +11,13 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 #define _PROPERTIES_SECTION_HEADER "[PROPERTIES]"
 
 namespace dm {
 
-// ====================================================================================================
+// ================================================================================================
 // | CONSTRUCTORS & DESTRUCTORS |
 // ==============================
 
@@ -39,16 +38,9 @@ namespace dm {
         this->setMarker(marker);
     }
 
-// ====================================================================================================
+// ================================================================================================
 // | ACCESSORS |
 // =============
-
-    Actor::Contact Actor::getContact(void) const {
-        return std::make_pair(
-            this->getId(), 
-            this->getFilePath()
-        );
-    }
 
     char Actor::getMarker(void) const {
         return this->_marker;
@@ -68,7 +60,7 @@ namespace dm {
         return this->getTile() != nullptr;
     }
 
-// ====================================================================================================
+// ================================================================================================
 // | MODIFIERS |
 // =============
 
@@ -77,21 +69,20 @@ namespace dm {
     }
 
     void Actor::setTile(Tile* tile) {
-        /* transition if:
-            - moving to a new stage
-            - moving from nothing to a stage
-            - moving from a stage to nothing
-        */
+        // transition if:
+        //  - moving to a new stage
+        //  - moving from nothing to a stage
+        //  - moving from a stage to nothing
 
         Tile* prevTile = this->getTile();
-            bool transit = (
-                tile != prevTile && (
-                    (tile == nullptr) != (prevTile == nullptr) ||
-                    tile->getParent() != prevTile->getParent()
-                )
-            );
+        bool transit = (
+            tile != prevTile && (
+                (tile == nullptr) != (prevTile == nullptr) ||
+                tile->getParent() != prevTile->getParent()
+            )
+        );
 
-            this->setTile(tile, transit);
+        this->setTile(tile, transit);
     }
 
     void Actor::setTile(Tile* tile, bool transit) {
@@ -116,7 +107,7 @@ namespace dm {
         }
     }
 
-// ====================================================================================================
+// ================================================================================================
 // | CONVERTERS |
 // ==============
 
@@ -153,7 +144,7 @@ namespace dm {
         return schema;
     }
 
-// ====================================================================================================
+// ================================================================================================
 // | LOGISTICS |
 // =============
 

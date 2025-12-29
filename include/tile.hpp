@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <ostream>
 #include <string>
 
 #define DM_TILE_MODIFIER_FLOOR 'f'
@@ -13,11 +14,11 @@ namespace dm {
 
     class Tile {
     
-        public:
-        // ============================================================================================
+        // ========================================================================================
         // | CONSTRUCTORS & DESTRUCTORS |
         // ==============================
         
+        public:
             Tile(void);
 
             Tile(Stage* parent, std::size_t row, std::size_t column);
@@ -26,14 +27,15 @@ namespace dm {
                  char modifier);
 
             ~Tile(void) = default;
-
-        public:
-        // ============================================================================================
+        
+        // ========================================================================================
         // | ACCESSORS |
         // =============
         
+        public:
             const Stage* getParent(void) const;
             Stage* getParent(void);
+            bool hasParent(void) const;
 
             std::size_t getRow(void) const;
             std::size_t getColumn(void) const;
@@ -45,29 +47,29 @@ namespace dm {
             const Actor* getActor(void) const;
             Actor* getActor(void);
             bool isOccupied(void) const;
-
-        public:
-        // ============================================================================================
+        
+        // ========================================================================================
         // | MODIFIERS |
         // =============
         
+        public:
             void setMarker(char marker);
             void setModifier(char modifer);
 
             void setActor(Actor* actor, bool transit = true);
-
-        public:
-        // ============================================================================================
+        
+        // ========================================================================================
         // | CONVERTERS |
         // ==============
         
+        public:
             std::string toString(void) const;
-
-        private:
-        // ============================================================================================
+        
+        // ========================================================================================
         // | MEMBERS |
         // ===========
         
+        private:
             Stage* _parent; // where the tile is stored
 
             std::size_t _row; // row index of the tile
@@ -78,5 +80,14 @@ namespace dm {
 
             Actor* _actor; // actor occupying the tile
     };
+    
+// ================================================================================================
+// | OPERATORS |
+// =============
+    
+    std::ostream& operator<<(
+        std::ostream& stream, 
+        const Tile& tile
+    );
 }
 

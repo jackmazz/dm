@@ -1,9 +1,9 @@
 #pragma once
 
 #include "actor.hpp"
+#include "asset.hpp"
 #include "config.hpp"
 #include "tile.hpp"
-#include "utils/asset.hpp"
 #include "utils/cache.hpp"
 #include "utils/schema.hpp"
 
@@ -16,11 +16,11 @@
 namespace dm {
     class Stage : public Asset {
     
-        public:
-        // ============================================================================================
+        // ========================================================================================
         // | CONSTRUCTORS & DESTRUCTORS |
         // ==============================
         
+        public:
             Stage(void);
 
             Stage(
@@ -41,12 +41,12 @@ namespace dm {
             );
 
             ~Stage(void) = default;
-
-        public:
-        // ============================================================================================
+        
+        // ========================================================================================
         // | ACCESSORS |
         // =============
         
+        public:
             std::size_t getSize(void) const;
             std::size_t getRowCount(void) const;
             std::size_t getColumnCount(void) const;
@@ -59,31 +59,31 @@ namespace dm {
             std::vector<Actor*> getActors(void);
 
             std::vector<Actor::Contact> getContacts(void) const;
-
-        public:
-        // ============================================================================================
+        
+        // ========================================================================================
         // | MODIFIERS |
         // =============
         
+        public:
             void addContact(const Actor::Contact& contact);
             void addContact(unsigned long id, const std::string& filePath);
 
             void removeContact(const Actor::Contact& contact);
             void removeContact(unsigned long id, const std::string& filePath);
-
-        public:
-        // ============================================================================================
+        
+        // ========================================================================================
         // | CONVERTERS |
         // ==============
         
+        public:
             std::string toString(void) const override;
             Schema toSchema(void) const override;
-
-        public:
-        // ============================================================================================
+        
+        // ========================================================================================
         // | LOGISTICS |
         // =============
         
+        public:
             static Stage* get(unsigned long id);
             static bool contains(unsigned long id);
 
@@ -92,7 +92,7 @@ namespace dm {
             static bool unload(unsigned long id);
         
         private:
-        // ============================================================================================
+        // ========================================================================================
         // | UTILITIES |
         // =============
         
@@ -101,11 +101,11 @@ namespace dm {
                 std::size_t column
             ) const;
         
-        private:
-        // ============================================================================================
+        // ========================================================================================
         // | MEMBERS |
         // ===========
         
+        private:
             static Cache<Stage, DM_STAGE_CACHE_CAP> _cache; // stage storage
 
             std::size_t _rowCount; // grid #of rows

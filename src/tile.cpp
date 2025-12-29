@@ -3,11 +3,12 @@
 #include "tile.hpp"
 
 #include <cstddef>
+#include <ostream>
 #include <string>
 
 namespace dm {
 
-// ====================================================================================================
+// ================================================================================================
 // | CONSTRUCTORS & DESTRUCTORS |
 // ==============================
 
@@ -38,7 +39,7 @@ namespace dm {
         this->setModifier(modifier);
     }
 
-// ====================================================================================================
+// ================================================================================================
 // | ACCESSORS |
 // =============
 
@@ -50,6 +51,10 @@ namespace dm {
         return const_cast<Stage*>(
             static_cast<const Tile*>(this)->getParent()
         );
+    }
+    
+    bool Tile::hasParent(void) const {
+        return this->getParent() != nullptr;
     }
 
     std::size_t Tile::getRow(void) const {
@@ -86,7 +91,7 @@ namespace dm {
         return this->getActor() != nullptr;
     }
 
-// ====================================================================================================
+// ================================================================================================
 // | MODIFIERS |
 // =============
 
@@ -111,26 +116,26 @@ namespace dm {
 
         // if this tile was occupied, set the old actor's tile to the null pointer
         if (prevActor != nullptr) {
-            prevActor->setTile(nullptr);
+            prevActor->setTile(nullptr, true);
 
             // if transitioning, update the parent's actor list
-            if (transit) {
+            if (transit && this->hasParent()) {
                 this->getParent()->removeContact(prevActor->getContact());
             }
         }
 
         // if this tile is now occupied, set the new actor's tile to this tile
         if (this->isOccupied()) {
-            actor->setTile(this);
+            actor->setTile(this, true);
 
             // if transitioning, update the parent's actor list
-            if (transit) {
+            if (transit && this->hasParent()) {
                 this->getParent()->removeContact(actor->getContact());
             }
         }
     }
 
-// ====================================================================================================
+// ================================================================================================
 // | CONVERTERS |
 // ==============
 
@@ -140,6 +145,18 @@ namespace dm {
         } else {
             return std::string(1, this->getMarker());
         }
+    }
+
+// ================================================================================================
+// | OPERATORS |
+// =============
+        
+    std::ostream& operator<<(
+        std::ostream& stream, 
+        const Tile& tile
+    ) {
+        stream << tile.toString();
+        return stream;
     }
 }
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils/asset.hpp"
+#include "asset.hpp"
 
 #include <array>
 #include <cstddef>
@@ -10,6 +10,11 @@
 namespace dm {
     template <typename T, std::size_t N>
     class Cache {
+    
+        // ========================================================================================
+        // | TEMPLATE ASSERTIONS |
+        // =======================
+    
         static_assert(
             std::is_base_of<Asset, T>::value, 
             "T must derive from Asset"
@@ -19,20 +24,20 @@ namespace dm {
             N > 0, 
             "N must be greater than 0"
         );
-
-        public:
-        // ============================================================================================
+        
+        // ========================================================================================
         // | CONSTRUCTORS & DESTRUCTORS |
         // ==============================
-
+        
+        public:
             Cache(void) {}
             ~Cache(void) = default;
         
-        public:
-        // ============================================================================================
+        // ========================================================================================
         // | ACCESSORS |
         // =============
-
+        
+        public:
             std::size_t getCapacity(void) const {
                 return this->_storage.size();
             }
@@ -126,11 +131,11 @@ namespace dm {
                 return this->get(id) != nullptr;
             }
         
-        public:
-        // ============================================================================================
+        // ========================================================================================
         // | MODIFIERS |
         // =============
-
+        
+        public:
             template <typename... Args>
             T* store(Args&&... args) {
                 // find an asset to be overwritten
@@ -219,12 +224,12 @@ namespace dm {
 
                 return true;
             }
-
-        private:
-        // ============================================================================================
+        
+        // ========================================================================================
         // | MEMBERS |
         // ===========
-
+        
+        private:
             std::array<T, N> _storage; // asset storage
     };
 }
