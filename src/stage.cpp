@@ -8,6 +8,7 @@
 #include "utils/strings.hpp"
 
 #include <cstddef>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -134,14 +135,12 @@ namespace dm {
         return actors;
     }
 
-    std::vector<Asset::Contact> Stage::getContacts(void) const {
-        // accumulate all contact information
-        std::vector<Asset::Contact> contacts;
-        for (const Asset::Contact& contact : this->_contacts) {
-            contacts.push_back(contact);
-        }
-
-        return contacts;
+    std::set<Asset::Contact> Stage::getContacts(void) const {
+        return _contacts;
+    }
+    
+    bool Stage::hasContact(Asset::Contact contact) const {
+        return this->_contacts.count(contact) > 0;
     }
 
 // ================================================================================================

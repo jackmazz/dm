@@ -29,13 +29,26 @@ namespace dm {
             std::abort();
         }
     }
+    
+    void assertTrue(
+        const std::string& testName,
+        const std::string& message,
+        bool condition
+    );
 
 // ================================================================================================
 // | LOGGING |
 // ===========
 
+    void setDebugModeEnabled(bool enabled);
+    bool isDebugModeEnabled(void);
+
     template <typename... Args>
     void debugPrint(double id, Args&&... args) {
+        if (!isDebugModeEnabled()) {
+            return;
+        }
+    
         std::ostringstream stream;
 
         stream << "[Debug-" << id << "]";

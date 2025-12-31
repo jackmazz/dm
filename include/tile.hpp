@@ -25,7 +25,7 @@ namespace dm {
 
             Tile(Stage* parent, std::size_t row, std::size_t column, char marker,
                  char modifier);
-
+            
             ~Tile(void) = default;
         
         // ========================================================================================
@@ -56,7 +56,7 @@ namespace dm {
             void setMarker(char marker);
             void setModifier(char modifer);
 
-            void setActor(Actor* actor, bool transit = true);
+            void setActor(Actor* actor, bool transit=true);
         
         // ========================================================================================
         // | CONVERTERS |

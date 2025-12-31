@@ -13,6 +13,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "utils/testing.hpp"
+
 #define _PROPERTIES_SECTION_HEADER "[PROPERTIES]"
 
 namespace dm {
@@ -86,23 +88,25 @@ namespace dm {
     }
 
     void Actor::setTile(Tile* tile, bool transit) {
-        Tile* prevTile = this->getTile();
-
-        // avoid infinite loop
+        // avoid unessessary modification
         if (tile == prevTile) {
+            debugPrint(1, "[actor.cpp]", "avoided inifinite loop for tile:", tile);
             return;
         }
-
+        
         // change this actor's tile
+        debugPrint(2, "[actor.cpp]", "set tile from", prevTile, "to", tile);
         this->_tile = tile;
 
         // if this actor was placed, set old tile's actor to the null pointer
         if (prevTile != nullptr) {
+            debugPrint(3, "[actor.cpp]", "set prev-tile's actor to null");
             prevTile->setActor(nullptr, transit);
         }
 
         // if this actor is now placed, set new tile's actor to this actor
         if (this->isPlaced()) {
+            debugPrint(4, "[actor.cpp]", "set new-tile's actor to ", this);
             tile->setActor(this, transit);
         }
     }

@@ -26,7 +26,7 @@ namespace dm {
                 const std::string& name, 
                 char marker
             );
-
+            
             ~Actor(void) = default;
         
         // ========================================================================================

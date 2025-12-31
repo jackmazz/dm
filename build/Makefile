@@ -9,6 +9,7 @@ OBJS += $(OBJ_DIR)/tile.o
 OBJS += $(OBJ_DIR)/actor.o
 OBJS += $(OBJ_DIR)/utils/schema.o
 OBJS += $(OBJ_DIR)/utils/strings.o
+OBJS += $(OBJ_DIR)/utils/testing.o
 
 TESTS := $(BIN_DIR)/tests/test-actor.exe
 TESTS += $(BIN_DIR)/tests/test-asset.exe
@@ -32,7 +33,7 @@ clean:
 	find $(BIN_DIR) -type f -name "*.exe" -delete
 
 ifeq ($(TARGET),all)
-test: clean $(TESTS)
+test: $(TESTS)
 	@for t in $(TESTS); do ./$$t; done
 else
 test: clean $(BIN_DIR)/tests/test-$(TARGET).exe

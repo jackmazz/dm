@@ -39,7 +39,7 @@ namespace dm {
                 const std::string& markers,
                 const std::string& modifiers
             );
-
+            
             ~Stage(void) = default;
         
         // ========================================================================================
@@ -58,7 +58,8 @@ namespace dm {
             std::vector<const Actor*> getActors(void) const;
             std::vector<Actor*> getActors(void);
 
-            std::vector<Actor::Contact> getContacts(void) const;
+            std::set<Actor::Contact> getContacts(void) const;
+            bool hasContact(Asset::Contact contact) const;
         
         // ========================================================================================
         // | MODIFIERS |

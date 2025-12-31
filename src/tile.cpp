@@ -6,6 +6,8 @@
 #include <ostream>
 #include <string>
 
+#include "utils/testing.hpp"
+
 namespace dm {
 
 // ================================================================================================
@@ -108,15 +110,18 @@ namespace dm {
 
         // avoid infinite loop
         if (actor == prevActor) {
+            debugPrint(5, "[tile.cpp]", "avoided inifinite loop for actor:", actor);
             return;
         }
 
         // change this tile's actor
         this->_actor = actor;
+        debugPrint(6, "[tile.cpp]", "set actor from", prevActor, "to", actor);
 
         // if this tile was occupied, set the old actor's tile to the null pointer
         if (prevActor != nullptr) {
             prevActor->setTile(nullptr, true);
+            debugPrint(7, "[tile.cpp]", "set prev-actor's tile to null");
 
             // if transitioning, update the parent's actor list
             if (transit && this->hasParent()) {
@@ -127,6 +132,7 @@ namespace dm {
         // if this tile is now occupied, set the new actor's tile to this tile
         if (this->isOccupied()) {
             actor->setTile(this, true);
+            debugPrint(8, "[tile.cpp]", "set new-actor's tile to ", this);
 
             // if transitioning, update the parent's actor list
             if (transit && this->hasParent()) {
