@@ -1,5 +1,5 @@
 #include "utils/schema.hpp"
-#include "utils/strings.hpp"
+#include "utils/string-tools.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -95,8 +95,7 @@ namespace dm {
                 // set the header to the upper-case line
                 header = strings::toUpperCase(line);
 
-                // add a new vector of entries under the header (if it doesn't
-                // exist)
+                // add a new vector of entries under the header (if it doesn't exist)
                 if (this->count(header) == 0) {
                     this->operator[](header) = std::vector<std::string>();
                 }

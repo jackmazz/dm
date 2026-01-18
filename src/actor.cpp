@@ -2,18 +2,16 @@
 #include "asset.hpp"
 #include "config.hpp"
 #include "stage.hpp"
-#include "tile.hpp"
+#include "unit.hpp"
 #include "utils/cache.hpp"
 #include "utils/schema.hpp"
-#include "utils/strings.hpp"
+#include "utils/string-tools.hpp"
 
 #include <cstddef>
+#include <map>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
 #include <vector>
-
-#include "utils/testing.hpp"
 
 #define _PROPERTIES_SECTION_HEADER "[PROPERTIES]"
 
@@ -23,102 +21,73 @@ namespace dm {
 // | CONSTRUCTORS & DESTRUCTORS |
 // ==============================
 
-    Actor::Actor(void) : Actor(0, "") {}
+    Actor::Actor(void)
+        : Actor(0, "")
+    {}
 
     Actor::Actor(
-        unsigned long id, 
+        unsigned long id,
         const std::string& filePath
-    ) : Actor(id, filePath, "", '\0') {}
+    )
+        : Actor(id, filePath, "", '\0')
+    {}
 
     Actor::Actor(
         unsigned long id, 
-        const std::string& filePath, 
+        const std::string& filePath,
         const std::string& name, 
         char marker
-    ) : Asset(id, filePath, name) {
-        this->_tile = nullptr;
-        this->setMarker(marker);
-    }
+    )
+        : Unit(id, filePath, name, marker)
+    {}
 
 // ================================================================================================
 // | ACCESSORS |
 // =============
 
-    char Actor::getMarker(void) const {
-        return this->_marker;
+    unsigned long Actor::getTypeId(void) const {
+        return DM_ACTOR_TYPE_ID;
     }
-
-    const Tile* Actor::getTile(void) const {
-        return this->_tile;
+    
+    std::string Actor::getTypeName(void) const {
+        return DM_ACTOR_TYPE_NAME;
     }
-
-    Tile* Actor::getTile(void) {
-        return const_cast<Tile*>(
-            static_cast<const Actor*>(this)->getTile()
-        );
+    
+    bool Actor::checkType(const Asset* asset) {
+        if (asset == nullptr) {
+            return false;
+        }
+    
+        return asset->getTypeId() == DM_ACTOR_TYPE_ID;
     }
-
-    bool Actor::isPlaced(void) const {
-        return this->getTile() != nullptr;
+    
+    bool Actor::checkType(const Asset::Contact& contact) {
+        return contact.typeId == DM_ACTOR_TYPE_ID;
     }
-
-// ================================================================================================
-// | MODIFIERS |
-// =============
-
-    void Actor::setMarker(char marker) {
-        this->_marker = marker;
-    }
-
-    void Actor::setTile(Tile* tile) {
-        // transition if:
-        //  - moving to a new stage
-        //  - moving from nothing to a stage
-        //  - moving from a stage to nothing
-
-        Tile* prevTile = this->getTile();
-        bool transit = (
-            tile != prevTile && (
-                (tile == nullptr) != (prevTile == nullptr) ||
-                tile->getParent() != prevTile->getParent()
-            )
-        );
-
-        this->setTile(tile, transit);
-    }
-
-    void Actor::setTile(Tile* tile, bool transit) {
-        // avoid unessessary modification
-        if (tile == prevTile) {
-            debugPrint(1, "[actor.cpp]", "avoided inifinite loop for tile:", tile);
-            return;
+    
+    const Actor* Actor::cast(const Asset* asset) {
+        if (asset == nullptr) {
+            return nullptr;
         }
         
-        // change this actor's tile
-        debugPrint(2, "[actor.cpp]", "set tile from", prevTile, "to", tile);
-        this->_tile = tile;
-
-        // if this actor was placed, set old tile's actor to the null pointer
-        if (prevTile != nullptr) {
-            debugPrint(3, "[actor.cpp]", "set prev-tile's actor to null");
-            prevTile->setActor(nullptr, transit);
+        // if the type id matches, we can safely cast
+        if (Actor::checkType(asset)) {
+            return static_cast<const Actor*>(asset);
         }
-
-        // if this actor is now placed, set new tile's actor to this actor
-        if (this->isPlaced()) {
-            debugPrint(4, "[actor.cpp]", "set new-tile's actor to ", this);
-            tile->setActor(this, transit);
-        }
+        
+        return nullptr;
     }
-
+    
+    Actor* Actor::cast(Asset* asset) {
+        return const_cast<Actor*>(
+            Actor::cast(static_cast<const Asset*>(asset))
+        );
+    }
+    
 // ================================================================================================
 // | CONVERTERS |
 // ==============
-
-    std::string Actor::toString(void) const {
-        return std::string(1, this->getMarker());
-    }
-
+    
     Schema Actor::toSchema(void) const {
         Schema schema;
         std::vector<std::string> properties;
@@ -147,27 +116,30 @@ namespace dm {
 
         return schema;
     }
-
+    
 // ================================================================================================
 // | LOGISTICS |
 // =============
 
     Cache<Actor, DM_ACTOR_CACHE_CAP> Actor::_cache;
 
-    Actor* Actor::get(unsigned long id) {
-        return Actor::_cache.get(id);
+    Actor* Actor::fetch(unsigned long id) {
+        return Actor::_cache.search(id);
     }
 
-    bool Actor::contains(unsigned long id) {
+    bool Actor::isLoaded(unsigned long id) {
         return Actor::_cache.contains(id);
     }
 
-    Actor* Actor::load(const std::string& filePath) {
-        std::string fullPath = DM_ACTOR_DIR+"/" + filePath;
-    
+    Actor* Actor::load(const std::string& filePath) {        
         // attempt to read the schema
+        // try to find the file in the state directory first
+        // if not found there, read from the template
         Schema schema;
-        if (!schema.read(fullPath)) {
+        if (
+            !schema.read(std::string(DM_STATE_DIR) + filePath) ||
+            !schema.read(std::string(DM_ASSET_DIR) + filePath)
+        ) {
             return nullptr;
         }
 
@@ -179,12 +151,16 @@ namespace dm {
         for (const Schema::Section& section : schema) {
             // process the properties section
             if (section.first == _PROPERTIES_SECTION_HEADER) {
-                std::unordered_map<std::string, std::string> keyValues =
+                std::map<std::string, std::string> keyValues =
                     strings::parseIni(section.second, "=");
 
                 // attempt to parse the loaded properties
                 try {
-                    id = stol(keyValues["id"]);
+                    id = stoul(
+                        keyValues["id"], 
+                        nullptr, 16
+                    );
+                    
                     name = keyValues["name"];
 
                     // marker length must be 1
@@ -195,11 +171,16 @@ namespace dm {
 
                     // if the actor was placed, get it's tile
                     if (keyValues.count("stage-id") > 0) {
-                        std::size_t stageId = stol(keyValues["stage-id"]);
-                        std::size_t row = stol(keyValues["row"]);
-                        std::size_t column = stol(keyValues["column"]);
+                        std::size_t stageId = stoul(
+                            keyValues["stage-id"], 
+                            nullptr, 16
+                        );
                         
-                        Stage* stage = Stage::get(stageId);
+                        std::size_t row = stoul(keyValues["row"]);
+                        std::size_t column = stoul(keyValues["column"]);
+                        
+                        // set the tile if the stage is loaded
+                        Stage* stage = Stage::fetch(stageId);
                         if (stage != nullptr) {
                             tile = stage->getTile(row, column);
                         }
@@ -217,7 +198,7 @@ namespace dm {
 
         // attempt to store the actor
         Actor* actor = Actor::_cache.store(
-            id, fullPath, name, 
+            id, filePath, name, 
             marker
         );
         if (actor == nullptr) {
@@ -235,7 +216,15 @@ namespace dm {
     }
 
     bool Actor::unload(unsigned long id) {
+        Actor* actor = Actor::_cache.search(id);
+        if (actor == nullptr) {
+            return false;
+        }
+    
+        // remove the actor, but don't unlink
+        actor->discard();
+        
         return Actor::_cache.remove(id);
     }
 }
-
+    

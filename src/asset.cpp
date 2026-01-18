@@ -1,4 +1,5 @@
 #include "asset.hpp"
+#include "config.hpp"
 
 #include <cstddef>
 #include <ostream>
@@ -11,21 +12,25 @@ namespace dm {
 // | CONSTRUCTORS & DESTRUCTORS |
 // ==============================
 
-    Asset::Asset(void) : Asset(0, "") {}
+    Asset::Asset(void)
+        : Asset(0, "")
+    {}
 
     Asset::Asset(
-        unsigned long id, 
+        unsigned long id,
         const std::string& filePath
-    ) : Asset(id, filePath, "") {}
+    )
+        : Asset(id, filePath, "")
+    {}
 
     Asset::Asset(
-        unsigned long id, 
-        const std::string& filePath, 
+        unsigned long id,
+        const std::string& filePath,
         const std::string& name
     ) {
         this->_id = id;
         this->_filePath = filePath;
-
+        
         this->setName(name);
         this->setPriority(0);
     }
@@ -35,16 +40,18 @@ namespace dm {
 // =============
 
     Asset::Contact Asset::getContact(void) const {
-        return std::make_pair(
-            this->getId(), 
-            this->getFilePath()
-        );
+        Asset::Contact contact;
+        contact.typeId = this->getTypeId();
+        contact.typeName = this->getTypeName();
+        contact.id = this->getId();
+        contact.filePath = this->getFilePath();
+        return contact;
     }
 
     unsigned long Asset::getId(void) const {
         return this->_id;
     }
-
+    
     std::string Asset::getFilePath(void) const {
         return this->_filePath;
     }
@@ -86,7 +93,10 @@ namespace dm {
 // =============
 
     bool Asset::save(void) const {
-        return this->toSchema().write(this->getFilePath());
+        // write the schema to the state directory
+        return this->toSchema().write(
+            std::string(DM_STATE_DIR) + this->getFilePath()
+        );
     }
     
 // ================================================================================================

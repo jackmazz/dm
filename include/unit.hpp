@@ -1,70 +1,73 @@
 #pragma once
 
 #include "asset.hpp"
-#include "config.hpp"
-#include "unit.hpp"
-#include "utils/cache.hpp"
+#include "tile.hpp"
+#include "utils/schema.hpp"
 
 #include <string>
 
-#define DM_ACTOR_TYPE_ID 0xB0000000
-#define DM_ACTOR_TYPE_NAME "actor"
-
 namespace dm {
-    class Actor : public Unit {
+    class Unit : public Asset {
         
         // ========================================================================================
         // | CONSTRUCTORS & DESTRUCTORS |
         // ==============================
         
         public:
-            Actor(void);
+            Unit(void);
 
-            Actor(
+            Unit(
                 unsigned long id,
-                const std::string& filePath
+                const std::string &filePath
             );
 
-            Actor(
+            Unit(
                 unsigned long id, 
-                const std::string& filePath,
+                const std::string &filePath,
                 const std::string& name, 
                 char marker
             );
             
-            ~Actor(void) = default;
+            ~Unit(void) = default;
         
         // ========================================================================================
-        // | ACESSORS |
-        // ============
+        // | ACCESSORS |
+        // =============
         
         public:
-            unsigned long getTypeId(void) const override;
-            std::string getTypeName(void) const override;
+            char getMarker(void) const;
             
-            static bool checkType(const Asset* asset);
-            static bool checkType(const Asset::Contact& contact);
+            const Tile* getTile(void) const;
+            Tile* getTile(void);
+            bool isPlaced(void) const;
+        
+        // ========================================================================================
+        // | MODIFIERS |
+        // =============
+        
+        public:
+            void setMarker(char marker);
             
-            static const Actor* cast(const Asset* asset);
-            static Actor* cast(Asset* asset);
+            void setTile(Tile* tile);
+            void discard(void);
         
         // ========================================================================================
         // | CONVERTERS |
         // ==============
         
         public:
-            Schema toSchema(void) const override;
+            std::string toString(void) const override;
         
         // ========================================================================================
         // | LOGISTICS |
         // =============
         
         public:
-            static Actor* fetch(unsigned long id);
-            static bool isLoaded(unsigned long id);
+            static Unit* search(unsigned long id);
+            static bool contains(unsigned long id);
 
-            static Actor* load(const std::string& filePath);
-            static Actor* select(unsigned long id);
+            static Unit* load(const std::string& filePath);
+            static Unit* select(unsigned long id);
             static bool unload(unsigned long id);
         
         // ========================================================================================
@@ -72,7 +75,8 @@ namespace dm {
         // ===========
         
          private:
-            static Cache<Actor, DM_ACTOR_CACHE_CAP> _cache; // unit storage
+            char _marker; // display character
+            Tile* _tile; // tile the unit occupies
     };
 }
 

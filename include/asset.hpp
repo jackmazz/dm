@@ -4,7 +4,6 @@
 
 #include <cstddef>
 #include <string>
-#include <utility>
 
 namespace dm {
     class Asset {
@@ -14,7 +13,12 @@ namespace dm {
         // =========
         
         public:
-            using Contact = std::pair<unsigned long, std::string>;
+            struct Contact {
+                unsigned long typeId;
+                std::string typeName;
+                unsigned long id;
+                std::string filePath;
+            };
         
         // ========================================================================================
         // | CONSTRUCTORS & DESTRUCTORS |
@@ -24,13 +28,13 @@ namespace dm {
             Asset(void);
             
             Asset(
-                unsigned long id, 
+                unsigned long id,
                 const std::string& filePath
             );
             
             Asset(
                 unsigned long id, 
-                const std::string& filePath, 
+                const std::string& filePath,
                 const std::string& name
             );
             
@@ -41,14 +45,17 @@ namespace dm {
         // =============
         
         public:
-            Asset::Contact getContact(void) const;
+            virtual unsigned long getTypeId(void) const = 0;
+            virtual std::string getTypeName(void) const = 0;
         
+            Asset::Contact getContact(void) const;
             unsigned long getId(void) const;
             std::string getFilePath(void) const;
+            
             std::string getName(void) const;
             
             std::size_t getPriority(void) const;
-            bool isActive(void) const;
+            bool isActive(void) const;            
         
         // ========================================================================================
         // | MODIFIERS |

@@ -109,7 +109,7 @@ namespace dm {
                 );
             }
 
-            const T* get(unsigned long id) const {
+            const T* search(unsigned long id) const {
                 // find an active asset associated with the given id
                 for (const T& asset : this->_storage) {
                     if (asset.isActive() && asset.getId() == id) {
@@ -121,14 +121,14 @@ namespace dm {
                 return nullptr;
             }
 
-            T* get(unsigned long id) {
+            T* search(unsigned long id) {
                 return const_cast<T*>(
-                    static_cast<const Cache*>(this)->get(id)
+                    static_cast<const Cache*>(this)->search(id)
                 );
             }
 
             bool contains(unsigned long id) const {
-                return this->get(id) != nullptr;
+                return this->search(id) != nullptr;
             }
         
         // ========================================================================================
@@ -174,7 +174,7 @@ namespace dm {
 
             T* select(unsigned long id) {
                 // find an active asset associated with the given id
-                T* target = this->get(id);
+                T* target = this->search(id);
                 if (target == nullptr) {
                     return nullptr;
                 }
@@ -198,7 +198,7 @@ namespace dm {
 
             bool remove(unsigned long id) {
                 // find an active asset associated with the given id
-                T* target = this->get(id);
+                T* target = this->search(id);
                 if (target == nullptr) {
                     return false;
                 }
@@ -223,6 +223,29 @@ namespace dm {
                 }
 
                 return true;
+            }
+            
+            bool clear(void) {
+                bool success = true;
+                for (T& asset : this->_storage) {
+                    // don't save unactive assets
+                    if (!asset.isActive()) {
+                        continue;
+                    }
+                    
+                    // try to clean up the asset
+                    if (asset->save()) {
+                        asset->deactivate();
+                    }
+                    
+                    // cleanup failed, return failure indication
+                    // still try to clean up remaining assets
+                    else {
+                        success = false;
+                    }
+                }
+                
+                return success;
             }
         
         // ========================================================================================

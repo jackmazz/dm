@@ -1,6 +1,7 @@
-#include "utils/strings.hpp"
+#include "utils/string-tools.hpp"
 
 #include <cstddef>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -106,6 +107,11 @@ namespace dm::strings {
                 columnCount
             );
             
+            // trim the values
+            for (std::size_t i = 0; i < splits.size(); i++) {
+                splits[i] = strings::trim(splits[i]);
+            }
+            
             // append the row if it contains all the required columns
             if (columnCount == 0 || splits.size() == columnCount) {
                 rows.push_back(splits);
@@ -115,11 +121,11 @@ namespace dm::strings {
         return rows;
     }
 
-    std::unordered_map<std::string, std::string> parseIni(
+    std::map<std::string, std::string> parseIni(
         std::vector<std::string> strings, 
         const std::string& delimiter
     ) {
-        std::unordered_map<std::string, std::string> keyValues;
+        std::map<std::string, std::string> keyValues;
         for (const std::string& string : strings) {
             // separate the key & value by the delimiter
             std::vector<std::string> split = strings::split(

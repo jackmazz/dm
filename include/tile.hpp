@@ -3,16 +3,27 @@
 #include <cstddef>
 #include <ostream>
 #include <string>
+#include <utility>
 
-#define DM_TILE_MODIFIER_FLOOR 'f'
-#define DM_TILE_MODIFIER_BARRIER 'b'
+#define DM_TILE_FLOOR_EFFECT 'f'
+#define DM_TILE_BARRIER_EFFECT 'b'
 
 namespace dm {
     // forward declarations
-    class Actor;
+    class Unit;
     class Stage;
 
     class Tile {
+    
+        // ========================================================================================
+        // | TYPES |
+        // =========
+        
+        public:
+            struct Position {
+                std::size_t row;
+                std::size_t column;
+            };
     
         // ========================================================================================
         // | CONSTRUCTORS & DESTRUCTORS |
@@ -21,10 +32,19 @@ namespace dm {
         public:
             Tile(void);
 
-            Tile(Stage* parent, std::size_t row, std::size_t column);
+            Tile(
+                Stage* parent, 
+                std::size_t row, 
+                std::size_t column
+            );
 
-            Tile(Stage* parent, std::size_t row, std::size_t column, char marker,
-                 char modifier);
+            Tile(
+                Stage* parent, 
+                std::size_t row, 
+                std::size_t column, 
+                char marker,
+                char effect
+            );
             
             ~Tile(void) = default;
         
@@ -36,16 +56,17 @@ namespace dm {
             const Stage* getParent(void) const;
             Stage* getParent(void);
             bool hasParent(void) const;
-
+            
+            Tile::Position getPosition(void) const;
             std::size_t getRow(void) const;
             std::size_t getColumn(void) const;
 
             char getMarker(void) const;
-            char getModifier(void) const;
+            char getEffect(void) const;
             bool isBlocked(void) const;
 
-            const Actor* getActor(void) const;
-            Actor* getActor(void);
+            const Unit* getOccupant(void) const;
+            Unit* getOccupant(void);
             bool isOccupied(void) const;
         
         // ========================================================================================
@@ -54,9 +75,10 @@ namespace dm {
         
         public:
             void setMarker(char marker);
-            void setModifier(char modifer);
+            void setEffect(char modifer);
 
-            void setActor(Actor* actor, bool transit=true);
+            void setOccupant(Unit* occupant);
+            void discardOccupant(void);
         
         // ========================================================================================
         // | CONVERTERS |
@@ -76,9 +98,9 @@ namespace dm {
             std::size_t _column; // column index of the tile
 
             char _marker; // display character
-            char _modifier; // whether the tile is a floor, barrier, door, etc.
+            char _effect; // whether the tile is a floor, barrier, door, etc.
 
-            Actor* _actor; // actor occupying the tile
+            Unit* _occupant; // unit occupying the tile
     };
     
 // ================================================================================================

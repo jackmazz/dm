@@ -1,4 +1,4 @@
-#include "utils/testing.hpp"
+#include "utils/dev-tools.hpp"
 
 #include <cstdlib>
 #include <string>
@@ -20,8 +20,20 @@ namespace dm {
         const std::string& message,
         bool condition
     ) {
+        if (!condition) {
+            std::cerr << "[Error] " << testName << " failed: " 
+                << message << "\n";
+            std::abort();
+        }
+    }
+    
+    void assertFalse(
+        const std::string& testName,
+        const std::string& message,
+        bool condition
+    ) {
         if (condition) {
-            std::cout << "[Error] " << testName << " failed: " 
+            std::cerr << "[Error] " << testName << " failed: " 
                 << message << "\n";
             std::abort();
         }

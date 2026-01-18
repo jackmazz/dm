@@ -1,7 +1,6 @@
-#include "actor.hpp"
+#include "unit.hpp"
 #include "stage.hpp"
 #include "tile.hpp"
-#include "unit.hpp"
 #include "utils/dev-tools.hpp"
 #include "utils/schema.hpp"
 
@@ -15,13 +14,13 @@
 static void _testBasicConstructors(void) {
     unsigned long id = 0xA0000000;
     std::string filePath = "file-path-A";
-    std::string name = "actor-A";
+    std::string name = "unit-A";
     char marker = 'A';
     
     // call each constructor
-    dm::Actor actor;
-    actor = dm::Actor(id, filePath);
-    actor = dm::Actor(id, filePath, name, marker);
+    dm::Unit unit;
+    unit = dm::Unit(id, filePath);
+    unit = dm::Unit(id, filePath, name, marker);
     
     std::cout << "test-basic-constructors passed\n";
 }
@@ -29,16 +28,16 @@ static void _testBasicConstructors(void) {
 static void _testBasicDestructors(void) {
     unsigned long id = 0xA0000000;
     std::string filePath = std::string("file-path-A");
-    std::string name = std::string("actor-A");
+    std::string name = std::string("unit-A");
     char marker = 'A';
     
     // destroy a local object
-    dm::Actor actor = dm::Actor(id, filePath, name, marker);
-    actor.~Actor();
+    dm::Unit unit = dm::Unit(id, filePath, name, marker);
+    unit.~Unit();
     
     // destroy a dynamically-allocated object
-    dm::Actor* heapActor = new dm::Actor(id, filePath, name, marker);
-    delete heapActor;
+    dm::Unit* heapUnit = new dm::Unit(id, filePath, name, marker);
+    delete heapUnit;
     
     std::cout << "test-basic-destructors passed\n";
 }
@@ -50,44 +49,44 @@ static void _testBasicDestructors(void) {
 static void _testBasicAccessors(void) {
     unsigned long id = 0xA0000000;
     std::string filePath = std::string("file-path-A");
-    std::string name = std::string("actor-A");
+    std::string name = std::string("unit-A");
     char marker = 'A';
 
-    dm::Actor actor = dm::Actor(id, filePath, name, marker);
+    dm::Unit unit = dm::Unit(id, filePath, name, marker);
     
     // test getId()
     dm::assertEquals(
         "test-basic-accessors-1",
         "getId() did not return the expected value",
-        id, actor.getId()
+        id, unit.getId()
     );
     
     // test getFilePath()
     dm::assertEquals(
         "test-basic-accessors-2",
         "getFilePath() did not return the expected value",
-        filePath, actor.getFilePath()
+        filePath, unit.getFilePath()
     );
     
     // test getName()
     dm::assertEquals(
         "test-basic-accessors-3",
         "getName() did not return the expected value",
-        name, actor.getName()
+        name, unit.getName()
     );
     
     // test getMarker()
     dm::assertEquals(
         "test-basic-accessors-4",
         "getMarker() did not return the expected value",
-        marker, actor.getMarker()
+        marker, unit.getMarker()
     );
     
     // test getTile()
     dm::assertEquals<void*>(
         "test-basic-accessors-5",
         "getTile() did not return the null pointer",
-        nullptr, actor.getTile()
+        nullptr, unit.getTile()
     );
     
     std::cout << "test-basic-accessors passed\n";
@@ -100,19 +99,19 @@ static void _testBasicAccessors(void) {
 static void _testBasicModifiers(void) {
     unsigned long id = 0xA0000000;
     std::string filePath = std::string("file-path-A");
-    std::string name = std::string("actor-A");
+    std::string name = std::string("unit-A");
     char marker = 'A';
     
-    dm::Actor actor = dm::Actor(id, filePath, name, marker);
+    dm::Unit unit = dm::Unit(id, filePath, name, marker);
     
     char newMarker = 'B';
     
     // test setMarker()
-    actor.setMarker(newMarker);
+    unit.setMarker(newMarker);
     dm::assertEquals(
         "test-basic-modifiers-1",
         "setMarker() did not update the marker",
-        newMarker, actor.getMarker()
+        newMarker, unit.getMarker()
     );
     
     std::cout << "test-basic-modifiers passed\n";
@@ -121,10 +120,10 @@ static void _testBasicModifiers(void) {
 static void _testSetTile(void) {
     unsigned long id = 0xA0000000;
     std::string filePath = std::string("file-path-A");
-    std::string name = std::string("actor-A");
+    std::string name = std::string("unit-A");
     char marker = 'A';
     
-    dm::Actor actor = dm::Actor(id, filePath, name, marker);
+    dm::Unit unit = dm::Unit(id, filePath, name, marker);
 
     dm::Stage stageA;
     dm::Stage stageB;
@@ -132,53 +131,57 @@ static void _testSetTile(void) {
     dm::Tile tileB(&stageB, 0, 0);
     dm::Tile tileC(&stageA, 0, 0);
     
-    auto subtest = [&actor](
+    auto subtest = [&unit](
         const std::string& testName, 
         dm::Tile* tile
     ) {
-        dm::Tile* prevTile = actor.getTile();
+        dm::Tile* prevTile = unit.getTile();
     
         // test setTile()
-        actor.setTile(tile);
+        unit.setTile(tile);
         dm::assertEquals(
             testName+"A",
             "setTile() did not update the tile",
-            tile, actor.getTile()
+            tile, unit.getTile()
         );
         
         if (prevTile != nullptr) {
             if (prevTile != tile) {
-                // test that the actor's previous tile isn't occupied 
+                // test that the unit's previous tile isn't occupied 
                 dm::assertFalse(
                     testName+"B",
-                    "the actor's previous tile is still occupied",
+                    "the unit's previous tile is still occupied",
                     prevTile->isOccupied()
                 );
             }
             
             if (tile == nullptr || prevTile->getParent() != tile->getParent()) {
-                // test that the actor's previous stage doesn't have the actor's contact
+                // test that the unit's previous stage doesn't have the unit's contact
                 dm::assertFalse(
                     testName+"C",
-                    "the actor's previous stage still has the actor's contact",
-                    prevTile->getParent()->isLinked(&actor)
+                    "the unit's previous stage still has the unit's contact",
+                    prevTile->getParent()->hasContact(
+                        unit.getContact()
+                    )
                 );
             }
         }
         
         if (tile != nullptr) {        
-            // test that the tile points to the actor
+            // test that the tile points to the unit
             dm::assertEquals(
                 testName+"D",
-                "the actor's tile does point to the actor",
-                &actor, dm::Actor::cast(actor.getTile()->getOccupant())
+                "the unit's tile does point to the unit",
+                &unit, unit.getTile()->getUnit()
             );
             
-            // test that the actor's stage has the actor's contact
+            // test that the unit's stage has the unit's contact
             dm::assertTrue(
                 testName+"E",
-                "the actor's stage doesn't have the actor's contact",
-                actor.getTile()->getParent()->isLinked(&actor)
+                "the unit's stage doesn't have the unit's contact",
+                unit.getTile()->getParent()->hasContact(
+                    unit.getContact()
+                )
             );
         }
     };
@@ -200,16 +203,16 @@ static void _testSetTile(void) {
 static void _testToString(void) {
     unsigned long id = 0xA0000000;
     std::string filePath = std::string("file-path-A");
-    std::string name = std::string("actor-A");
+    std::string name = std::string("unit-A");
     char marker = 'A';
     
-    dm::Actor actor = dm::Actor(id, filePath, name, marker);
+    dm::Unit unit = dm::Unit(id, filePath, name, marker);
     
     // test toString()
     dm::assertEquals(
         "test-to-string-1",
         "toString() did not return the expected string",
-        std::string(1, marker), actor.toString()
+        std::string(1, marker), unit.toString()
     );
     
     std::cout << "test-to-string passed\n";
@@ -218,10 +221,10 @@ static void _testToString(void) {
 static void _testToSchema(void) {
     unsigned long id = 0xA0000000;
     std::string filePath = std::string("file-path-A");
-    std::string name = std::string("actor-A");
+    std::string name = std::string("unit-A");
     char marker = 'A';
     
-    dm::Actor actor = dm::Actor(id, filePath, name, marker);
+    dm::Unit unit = dm::Unit(id, filePath, name, marker);
     
     dm::Schema schema = dm::Schema::decode(
         std::string() +
@@ -235,7 +238,7 @@ static void _testToSchema(void) {
     dm::assertEquals(
         "test-to-schema-1",
         "toSchema() did not return the expected schema",
-        schema, actor.toSchema()
+        schema, unit.toSchema()
     );
 
     std::cout << "test-to-schema passed\n";
@@ -246,7 +249,7 @@ static void _testToSchema(void) {
 // ========
 
 int main(int argCount, char** args) {
-    std::cout << "\nTesting actor.cpp\n";
+    std::cout << "\nTesting unit.cpp\n";
 
     std::string testName = "all";
     if (argCount > 1) {

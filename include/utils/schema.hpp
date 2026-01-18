@@ -1,13 +1,13 @@
 #pragma once
 
 #include <ostream>
+#include <map>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
 namespace dm {
-    class Schema : public std::unordered_map<std::string, std::vector<std::string>> {
+    class Schema : public std::map<std::string, std::vector<std::string>> {
         
         // ========================================================================================
         // | TYPES |

@@ -1,12 +1,11 @@
-#include "actor.hpp"
 #include "stage.hpp"
 #include "tile.hpp"
+#include "unit.hpp"
 
 #include <cstddef>
 #include <ostream>
 #include <string>
-
-#include "utils/testing.hpp"
+#include <utility>
 
 namespace dm {
 
@@ -14,31 +13,35 @@ namespace dm {
 // | CONSTRUCTORS & DESTRUCTORS |
 // ==============================
 
-    Tile::Tile(void) : Tile(nullptr, 0, 0) {}
+    Tile::Tile(void) 
+        : Tile(nullptr, 0, 0)
+    {}
 
     Tile::Tile(
         Stage* parent, 
         std::size_t row, 
         std::size_t column
-    ) : Tile(
-        parent, row, column, 
-        '\0', DM_TILE_MODIFIER_FLOOR
-    ) {}
+    ) 
+        : Tile(
+            parent, row, column, 
+            '\0', DM_TILE_FLOOR_EFFECT
+        )
+    {}
 
     Tile::Tile(
         Stage* parent, 
         std::size_t row, 
         std::size_t column, 
         char marker, 
-        char modifier
+        char effect
     ) {
         this->_parent = parent;
         this->_row = row;
         this->_column = column;
-        this->_actor = nullptr;
+        this->_occupant = nullptr;
 
         this->setMarker(marker);
-        this->setModifier(modifier);
+        this->setEffect(effect);
     }
 
 // ================================================================================================
@@ -58,6 +61,13 @@ namespace dm {
     bool Tile::hasParent(void) const {
         return this->getParent() != nullptr;
     }
+    
+    Tile::Position Tile::getPosition(void) const {
+        Tile::Position position;
+        position.row = this->getRow();
+        position.column = this->getColumn();
+        return position;
+    }
 
     std::size_t Tile::getRow(void) const {
         return this->_row;
@@ -71,26 +81,26 @@ namespace dm {
         return this->_marker;
     }
 
-    char Tile::getModifier(void) const {
-        return this->_modifier;
+    char Tile::getEffect(void) const {
+        return this->_effect;
     }
 
     bool Tile::isBlocked(void) const {
-        return this->getModifier() == DM_TILE_MODIFIER_BARRIER;
+        return this->getEffect() == DM_TILE_BARRIER_EFFECT;
     }
 
-    const Actor* Tile::getActor(void) const {
-        return this->_actor;
+    const Unit* Tile::getUnit(void) const {
+        return this->_unit;
     }
 
-    Actor* Tile::getActor(void) {
-        return const_cast<Actor*>(
-            static_cast<const Tile*>(this)->getActor()
+    Unit* Tile::getUnit(void) {
+        return const_cast<Unit*>(
+            static_cast<const Tile*>(this)->getUnit()
         );
     }
 
     bool Tile::isOccupied(void) const {
-        return this->getActor() != nullptr;
+        return this->getUnit() != nullptr;
     }
 
 // ================================================================================================
@@ -101,43 +111,54 @@ namespace dm {
         this->_marker = marker;
     }
 
-    void Tile::setModifier(char modifier) {
-        this->_modifier = modifier;
+    void Tile::setEffect(char effect) {
+        this->_effect = effect;
     }
-
-    void Tile::setActor(Actor* actor, bool transit) {
-        Actor* prevActor = this->getActor();
-
-        // avoid infinite loop
-        if (actor == prevActor) {
-            debugPrint(5, "[tile.cpp]", "avoided inifinite loop for actor:", actor);
+    
+    void Tile::setUnit(Unit* occupant) {
+        // if removing the current unit ...
+        if (occupant == nullptr && this->isOccupied()) {
+            Unit* previous = this->getUnit();
+            this->_occupant = nullptr;
+            
+            // update the old occupant (if not already updated)
+            if (previous->getTile() == this) {
+                previous->setTile(nullptr);
+            }
+            
+            // unlink the old occupant from the parent
+            if (this->hasParent()) {
+                this->getParent()->unlink(previous.getId());
+            }
+        } 
+        
+        // if setting (not replacing) the occupant ...
+        else if (occupant != nullptr && !this->isOccupied()) {
+            this->_occupant = occupant;
+            
+            // update the new occupant (if not already updated)
+            if (occupant->getTile() != this) {
+                occupant->setTile(this);
+            }
+            
+            // link the old occupant to the parent
+            if (this->hasParent()) {
+                this->getParent()->link(occupant.getId());
+            }
+        }
+    }
+    
+    void Tile::discardOccupant(void) {
+        if (!this->isOccupied()) {
             return;
         }
-
-        // change this tile's actor
-        this->_actor = actor;
-        debugPrint(6, "[tile.cpp]", "set actor from", prevActor, "to", actor);
-
-        // if this tile was occupied, set the old actor's tile to the null pointer
-        if (prevActor != nullptr) {
-            prevActor->setTile(nullptr, true);
-            debugPrint(7, "[tile.cpp]", "set prev-actor's tile to null");
-
-            // if transitioning, update the parent's actor list
-            if (transit && this->hasParent()) {
-                this->getParent()->removeContact(prevActor->getContact());
-            }
-        }
-
-        // if this tile is now occupied, set the new actor's tile to this tile
-        if (this->isOccupied()) {
-            actor->setTile(this, true);
-            debugPrint(8, "[tile.cpp]", "set new-actor's tile to ", this);
-
-            // if transitioning, update the parent's actor list
-            if (transit && this->hasParent()) {
-                this->getParent()->removeContact(actor->getContact());
-            }
+        
+        Unit* previous = this->getOccupant();
+        this->_occupant = nullptr;
+        
+        // update the old occupant (if not already updated)
+        if (previous->getTile() == this) {
+            previous->discard();
         }
     }
 
@@ -147,7 +168,7 @@ namespace dm {
 
     std::string Tile::toString(void) const {
         if (this->isOccupied()) {
-            return this->getActor()->toString();
+            return this->getOccupabt()->toString();
         } else {
             return std::string(1, this->getMarker());
         }

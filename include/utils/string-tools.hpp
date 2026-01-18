@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstddef>
+#include <map>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace dm::strings {
@@ -32,7 +32,7 @@ namespace dm::strings {
         std::size_t columnCount = 0
     );
 
-    std::unordered_map<std::string, std::string> parseIni(
+    std::map<std::string, std::string> parseIni(
         std::vector<std::string> strings, 
         const std::string& delimiter
     );

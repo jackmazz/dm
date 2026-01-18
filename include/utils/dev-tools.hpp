@@ -19,7 +19,7 @@ namespace dm {
         const T& actual
     ) {
         if (expected != actual) {
-            std::cout << "[Error] " << testName << " failed: "
+            std::cerr << "[Error] " << testName << " failed: "
                 << message
                 << " ("
                     << "expected != actual"
@@ -30,7 +30,32 @@ namespace dm {
         }
     }
     
+    template <typename T>
+    void assertNotEquals(
+        const std::string& testName,
+        const std::string& message,
+        const T& expected, 
+        const T& actual
+    ) {
+        if (expected == actual) {
+            std::cerr << "[Error] " << testName << " failed: "
+                << message
+                << " ("
+                    << "expected == actual"
+                << ") -> (" 
+                    << expected << " == " << actual
+                << ")" << "\n";
+            std::abort();
+        }
+    }
+    
     void assertTrue(
+        const std::string& testName,
+        const std::string& message,
+        bool condition
+    );
+    
+    void assertFalse(
         const std::string& testName,
         const std::string& message,
         bool condition
@@ -54,7 +79,7 @@ namespace dm {
         stream << "[Debug-" << id << "]";
         ((stream << " " << std::forward<Args>(args)), ...);
 
-        std::cout << stream.str() << "\n";
+        std::cerr << stream.str() << "\n";
     }
 }
 

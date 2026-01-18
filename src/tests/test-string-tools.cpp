@@ -10,7 +10,7 @@ int main(int argCount, char** args) {
     (void)argCount;
     (void)args;
 
-    std::cout << "\nTesting utils/strings.cpp\n";
+    std::cout << "\nTesting utils/string-tools.cpp\n";
     std::cout << "All tests passed\n";
     return 0;
 }
