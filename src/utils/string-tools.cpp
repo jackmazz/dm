@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace dm::strings {
+namespace dm::stringTools {
 
 // ================================================================================================
 // | FORMATTING |
@@ -29,6 +29,18 @@ namespace dm::strings {
         return string.substr(start, end - start);
     }
 
+    std::string toLowerCase(const std::string& string) {
+        // create a copy of the input string
+        std::string copy = string;
+
+        // convert each character to be unsigned and lower-case
+        for (char& c : copy) {
+            c = std::toupper(static_cast<unsigned char>(c));
+        }
+
+        return copy;
+    }
+    
     std::string toUpperCase(const std::string& string) {
         // create a copy of the input string
         std::string copy = string;
@@ -41,21 +53,16 @@ namespace dm::strings {
         return copy;
     }
 
-    std::string toLowerCase(const std::string& string) {
-        // create a copy of the input string
-        std::string copy = string;
-
-        // convert each character to be unsigned and lower-case
-        for (char& c : copy) {
-            c = std::toupper(static_cast<unsigned char>(c));
-        }
-
-        return copy;
-    }
-
 // ================================================================================================
 // | PARSING |
 // ===========
+
+    std::vector<std::string> split(
+        const std::string& string, 
+        const std::string& delimiter
+    ) {
+        return stringTools::split(string, delimiter, 0);
+    }
 
     std::vector<std::string> split(
         const std::string& string, 
@@ -92,6 +99,7 @@ namespace dm::strings {
 
         return splits;
     }
+    
 
     std::vector<std::vector<std::string>> parseDsv(
         std::vector<std::string> strings, 
@@ -109,7 +117,7 @@ namespace dm::strings {
             
             // trim the values
             for (std::size_t i = 0; i < splits.size(); i++) {
-                splits[i] = strings::trim(splits[i]);
+                splits[i] = stringTools::trim(splits[i]);
             }
             
             // append the row if it contains all the required columns
@@ -123,21 +131,20 @@ namespace dm::strings {
 
     std::map<std::string, std::string> parseIni(
         std::vector<std::string> strings, 
-        const std::string& delimiter
+        const std::string& associator
     ) {
         std::map<std::string, std::string> keyValues;
         for (const std::string& string : strings) {
             // separate the key & value by the delimiter
-            std::vector<std::string> split = strings::split(
+            std::vector<std::string> split = stringTools::split(
                 string, 
-                delimiter, 
-                2
+                associator, 2
             );
             
             // insert the key-value if a delimiter was found
             if (split.size() == 2) {
-                std::string key = strings::trim(split[0]);
-                std::string value = strings::trim(split[1]);
+                std::string key = stringTools::trim(split[0]);
+                std::string value = stringTools::trim(split[1]);
                 keyValues[key] = value;
             }
         }

@@ -17,18 +17,18 @@ namespace dm {
             Unit(void);
 
             Unit(
-                unsigned long id,
+                unsigned long primeId,
                 const std::string &filePath
             );
 
             Unit(
-                unsigned long id, 
+                unsigned long primeId, 
                 const std::string &filePath,
                 const std::string& name, 
                 char marker
             );
             
-            ~Unit(void) = default;
+            virtual ~Unit(void) = default;
         
         // ========================================================================================
         // | ACCESSORS |
@@ -63,12 +63,12 @@ namespace dm {
         // =============
         
         public:
-            static Unit* search(unsigned long id);
-            static bool contains(unsigned long id);
+            static Unit* search(unsigned long primeId);
+            static bool contains(unsigned long primeId);
 
             static Unit* load(const std::string& filePath);
-            static Unit* select(unsigned long id);
-            static bool unload(unsigned long id);
+            static Unit* select(unsigned long primeId);
+            static bool unload(unsigned long primeId);
         
         // ========================================================================================
         // | MEMBERS |

@@ -4,7 +4,7 @@
 #include "stage.hpp"
 #include "unit.hpp"
 #include "utils/cache.hpp"
-#include "utils/schema.hpp"
+#include "utils/form.hpp"
 #include "utils/string-tools.hpp"
 
 #include <cstddef>
@@ -26,19 +26,19 @@ namespace dm {
     {}
 
     Actor::Actor(
-        unsigned long id,
+        unsigned long assetId,
         const std::string& filePath
     )
-        : Actor(id, filePath, "", '\0')
+        : Actor(assetId, filePath, "", '\0')
     {}
 
     Actor::Actor(
-        unsigned long id, 
+        unsigned long assetId, 
         const std::string& filePath,
         const std::string& name, 
         char marker
     )
-        : Unit(id, filePath, name, marker)
+        : Unit(assetId, filePath, name, marker)
     {}
 
 // ================================================================================================
@@ -88,12 +88,13 @@ namespace dm {
 // | CONVERTERS |
 // ==============
     
-    Schema Actor::toSchema(void) const {
-        Schema schema;
+    Form Actor::toForm(void) const {
+        Form form;
         std::vector<std::string> properties;
 
         // append properties
-        properties.push_back("id = " + std::to_string(this->getId()));
+        properties.push_back("type-id = " + std::to_string(this->getTypeId()));
+        properties.push_back("form-id = " + std::to_string(this->getPrimeId()));
         properties.push_back("name = " + this->getName());
         properties.push_back("marker = " + std::string(1, this->getMarker()));
         
@@ -112,9 +113,9 @@ namespace dm {
         }
 
         // map headers to entries
-        schema[_PROPERTIES_SECTION_HEADER] = properties;
+        form[_PROPERTIES_SECTION_HEADER] = properties;
 
-        return schema;
+        return form;
     }
     
 // ================================================================================================
@@ -123,32 +124,32 @@ namespace dm {
 
     Cache<Actor, DM_ACTOR_CACHE_CAP> Actor::_cache;
 
-    Actor* Actor::fetch(unsigned long id) {
-        return Actor::_cache.search(id);
+    Actor* Actor::fetch(unsigned long primeId) {
+        return Actor::_cache.search(primeId);
     }
 
-    bool Actor::isLoaded(unsigned long id) {
-        return Actor::_cache.contains(id);
+    bool Actor::isLoaded(unsigned long primeId) {
+        return Actor::_cache.contains(primeId);
     }
 
     Actor* Actor::load(const std::string& filePath) {        
-        // attempt to read the schema
+        // attempt to read the form
         // try to find the file in the state directory first
         // if not found there, read from the template
-        Schema schema;
+        Form form;
         if (
-            !schema.read(std::string(DM_STATE_DIR) + filePath) ||
-            !schema.read(std::string(DM_ASSET_DIR) + filePath)
+            !form.read(std::string(DM_STATE_DIR) + filePath) ||
+            !form.read(std::string(DM_ASSET_DIR) + filePath)
         ) {
             return nullptr;
         }
 
         Tile* tile = nullptr;
-        unsigned long id;
+        unsigned long primeId;
         std::string name;
         char marker;
 
-        for (const Schema::Section& section : schema) {
+        for (const Form::Section& section : form) {
             // process the properties section
             if (section.first == _PROPERTIES_SECTION_HEADER) {
                 std::map<std::string, std::string> keyValues =
@@ -156,8 +157,8 @@ namespace dm {
 
                 // attempt to parse the loaded properties
                 try {
-                    id = stoul(
-                        keyValues["id"], 
+                    primeId = stoul(
+                        keyValues["form-id"], 
                         nullptr, 16
                     );
                     
@@ -198,7 +199,7 @@ namespace dm {
 
         // attempt to store the actor
         Actor* actor = Actor::_cache.store(
-            id, filePath, name, 
+            primeId, filePath, name, 
             marker
         );
         if (actor == nullptr) {
@@ -211,12 +212,12 @@ namespace dm {
         return actor;
     }
 
-    Actor* Actor::select(unsigned long id) {
-        return Actor::_cache.select(id);
+    Actor* Actor::select(unsigned long primeId) {
+        return Actor::_cache.select(primeId);
     }
 
-    bool Actor::unload(unsigned long id) {
-        Actor* actor = Actor::_cache.search(id);
+    bool Actor::unload(unsigned long primeId) {
+        Actor* actor = Actor::_cache.search(primeId);
         if (actor == nullptr) {
             return false;
         }
@@ -224,7 +225,7 @@ namespace dm {
         // remove the actor, but don't unlink
         actor->discard();
         
-        return Actor::_cache.remove(id);
+        return Actor::_cache.remove(primeId);
     }
 }
     

@@ -9,13 +9,13 @@ OBJS += $(OBJ_DIR)/stage.o
 OBJS += $(OBJ_DIR)/tile.o
 OBJS += $(OBJ_DIR)/unit.o
 OBJS += $(OBJ_DIR)/utils/dev-tools.o
-OBJS += $(OBJ_DIR)/utils/schema.o
+OBJS += $(OBJ_DIR)/utils/form.o
 OBJS += $(OBJ_DIR)/utils/string-tools.o
 
 TESTS := $(BIN_DIR)/tests/test-actor.exe
 TESTS += $(BIN_DIR)/tests/test-cache.exe
 TESTS += $(BIN_DIR)/tests/test-dev-tools.exe
-TESTS += $(BIN_DIR)/tests/test-schema.exe
+TESTS += $(BIN_DIR)/tests/test-form.exe
 TESTS += $(BIN_DIR)/tests/test-stage.exe
 TESTS += $(BIN_DIR)/tests/test-string-tools.exe
 TESTS += $(BIN_DIR)/tests/test-tile.exe

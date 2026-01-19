@@ -16,19 +16,19 @@ namespace dm {
     {}
 
     Unit::Unit(
-        unsigned long id,
+        unsigned long primeId,
         const std::string &filePath
     )
-        : Unit(id, filePath, "", '\0')
+        : Unit(primeId, filePath, "", '\0')
     {}
 
     Unit::Unit(
-        unsigned long id, 
+        unsigned long primeId, 
         const std::string &filePath,
         const std::string& name, 
         char marker
     )
-        : Asset(id, filePath, name)
+        : Asset(primeId, filePath, name)
     {
         this->_tile = nullptr;
         this->setMarker(marker);

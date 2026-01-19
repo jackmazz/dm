@@ -5,7 +5,7 @@
 #include "tile.hpp"
 #include "unit.hpp"
 #include "utils/cache.hpp"
-#include "utils/schema.hpp"
+#include "utils/form.hpp"
 #include "utils/string-tools.hpp"
 
 #include <cstddef>
@@ -32,20 +32,20 @@ namespace dm {
     {}
 
     Stage::Stage(
-        unsigned long id, 
+        unsigned long primeId, 
         const std::string& filePath,
         std::size_t rowCount, 
         std::size_t columnCount
     ) 
         : Stage(
-            id, filePath, "", 
+            primeId, filePath, "", 
             rowCount, columnCount, 
             "", ""
         )
     {}
 
     Stage::Stage(
-        unsigned long id, 
+        unsigned long primeId, 
         const std::string& filePath,
         const std::string& name, 
         std::size_t rowCount, 
@@ -53,7 +53,7 @@ namespace dm {
         const std::string& markers, 
         const std::string& effects
     ) 
-        : Asset(id, filePath, name)
+        : Asset(primeId, filePath, name)
     {
         this->_rowCount = rowCount;
         this->_columnCount = columnCount;
@@ -171,8 +171,8 @@ namespace dm {
     std::vector<const Actor*> Stage::getActors(void) const {
         // accumulate all actors which are currently loaded
         std::vector<const Actor*> actors;
-        for (unsigned long id : this->_actorState) { WRONG
-            const Actor* actor = Actor::search(id);
+        for (unsigned long primeId : this->_actorState) { WRONG
+            const Actor* actor = Actor::search(primeId);
             if (actor != nullptr) {
                 actors.push_back(actor);
             }
@@ -184,8 +184,8 @@ namespace dm {
     std::vector<Actor*> Stage::getActors(void) {
         // accumulate all actors which are currently loaded
         std::vector<Actor*> actors;
-        for (unsigned long id : this->_actorState) { WRONG
-            Actor* actor = Actor::search(id);
+        for (unsigned long primeId : this->_actorState) { WRONG
+            Actor* actor = Actor::search(primeId);
             if (actor != nullptr) {
                 actors.push_back(actor);
             }
@@ -296,15 +296,16 @@ namespace dm {
         return string;
     }
 
-    Schema Stage::toSchema(void) const {
-        Schema schema;
+    Form Stage::toForm(void) const {
+        Form form;
         std::vector<std::string> properties;
         std::vector<std::string> markers;
         std::vector<std::string> effects;
         std::vector<std::string> links;
 
         // append properties
-        properties.push_back("id = " + std::to_string(this->getId()));
+        properties.push_back("type-id = " + std::to_string(this->getTypeId()));
+        properties.push_back("asset-id = " + std::to_string(this->getFormId()));
         properties.push_back("name = " + this->getName());
         properties.push_back("row-count = " + std::to_string(this->getRowCount()));
         properties.push_back("column-count = " + std::to_string(this->getColumnCount()));
@@ -329,7 +330,7 @@ namespace dm {
             links.push_back(
                 link.first.typeName + ", "
                     + std::to_string(link.first.typeId) + ", "
-                    + std::to_string(link.first.id) + ", "
+                    + std::to_string(link.first.primeId) + ", "
                     + link.first.filePath + ", "
                     + std::to_string(link.second.row) + ", "
                     + std::to_string(link.second.column)
@@ -337,12 +338,12 @@ namespace dm {
         }
 
         // map headers to entries
-        schema[_PROPERTIES_SECTION_HEADER] = properties;
-        schema[_MARKERS_SECTION_HEADER] = markers;
-        schema[_EFFECTS_SECTION_HEADER] = effects;
-        schema[_UNITS_SECTION_HEADER] = links;
+        form[_PROPERTIES_SECTION_HEADER] = properties;
+        form[_MARKERS_SECTION_HEADER] = markers;
+        form[_EFFECTS_SECTION_HEADER] = effects;
+        form[_UNITS_SECTION_HEADER] = links;
 
-        return schema;
+        return form;
     }
 
 // ================================================================================================
@@ -360,13 +361,13 @@ namespace dm {
     }
 
     Stage* Stage::load(const std::string& filePath) {    
-        // attempt to read the schema
+        // attempt to read the form
         // try to find the file in the state directory first
         // if not found there, read from the template
-        Schema schema;
+        Form form;
         if (
-            !schema.read(std::string(DM_STATE_DIR) + filePath) ||
-            !schema.read(std::string(DM_ASSET_DIR) + filePath)
+            !form.read(std::string(DM_STATE_DIR) + filePath) ||
+            !form.read(std::string(DM_ASSET_DIR) + filePath)
         ) {
             return nullptr;
         }
@@ -379,7 +380,7 @@ namespace dm {
         std::string effects = "";
         std::vector<Stage::Link> links;
 
-        for (const Schema::Section& section : schema) {
+        for (const Form::Section& section : form) {
             // process the properties section
             if (section.first == _PROPERTIES_SECTION_HEADER) {
                 std::map<std::string, std::string> keyValues 

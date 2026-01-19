@@ -1,25 +1,14 @@
 #pragma once
 
-#include "utils/schema.hpp"
+#include "utils/form.hpp"
 
 #include <cstddef>
+#include <ostream>
 #include <string>
 
 namespace dm {
     class Asset {
-        
-        // ========================================================================================
-        // | TYPES |
-        // =========
-        
-        public:
-            struct Contact {
-                unsigned long typeId;
-                std::string typeName;
-                unsigned long id;
-                std::string filePath;
-            };
-        
+    
         // ========================================================================================
         // | CONSTRUCTORS & DESTRUCTORS |
         // ==============================
@@ -28,12 +17,12 @@ namespace dm {
             Asset(void);
             
             Asset(
-                unsigned long id,
+                unsigned long primeId,
                 const std::string& filePath
             );
             
             Asset(
-                unsigned long id, 
+                unsigned long primeId, 
                 const std::string& filePath,
                 const std::string& name
             );
@@ -49,7 +38,7 @@ namespace dm {
             virtual std::string getTypeName(void) const = 0;
         
             Asset::Contact getContact(void) const;
-            unsigned long getId(void) const;
+            unsigned long getFormId(void) const;
             std::string getFilePath(void) const;
             
             std::string getName(void) const;
@@ -69,12 +58,20 @@ namespace dm {
             void deactivate(void);
         
         // ========================================================================================
+        // | COMPARATORS |
+        // ===============
+        
+        public:
+            bool equals(const Asset& other) const;
+            std::size_t compare(const Asset& other) const;
+        
+        // ========================================================================================
         // | CONVERTERS |
         // ==============
         
         public:
             virtual std::string toString(void) const = 0;
-            virtual Schema toSchema(void) const = 0;
+            virtual Form toForm(void) const = 0;
         
         // ========================================================================================
         // | LOGISTICS |
@@ -88,7 +85,7 @@ namespace dm {
         // ===========
         
         private:
-            unsigned long _id; // unique id
+            unsigned long _primeId; // unique id
             std::string _filePath; // path to read & write
             std::string _name; // display name
             
@@ -98,6 +95,31 @@ namespace dm {
 // ================================================================================================
 // | OPERATORS |
 // =============
+
+    bool operator==(
+        const Asset& assetA,
+        const Asset& assetB
+    );
+    
+    bool operator<(
+        const Asset& assetA,
+        const Asset& assetB
+    );
+    
+    bool operator<=(
+        const Asset& assetA,
+        const Asset& assetB
+    );
+    
+    bool operator>(
+        const Asset& assetA,
+        const Asset& assetB
+    );
+
+    bool operator>=(
+        const Asset& assetA,
+        const Asset& assetB
+    );
     
     std::ostream& operator<<(
         std::ostream& stream, 

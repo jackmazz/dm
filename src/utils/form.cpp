@@ -1,4 +1,4 @@
-#include "utils/schema.hpp"
+#include "utils/form.hpp"
 #include "utils/string-tools.hpp"
 
 #include <fstream>
@@ -13,18 +13,18 @@ namespace dm {
 // | ENCODING & DECODING |
 // =======================
 
-    Schema Schema::decode(const std::string& string) {
-        Schema schema;
+    Form Form::decode(const std::string& string) {
+        Form form;
         
         std::istringstream stream(string);
-        schema._input(stream);
+        form._input(stream);
 
-        return schema;
+        return form;
     }
 
-    std::string Schema::encode(const Schema& schema) {
+    std::string Form::encode(const Form& form) {
         std::ostringstream stream;
-        schema._output(stream);
+        form._output(stream);
 
         return stream.str();
     }
@@ -33,7 +33,7 @@ namespace dm {
 // | LOGISTICS |
 // =============
 
-    bool Schema::read(const std::string& filePath) {
+    bool Form::read(const std::string& filePath) {
         // attempt to open the file
         std::ifstream file(filePath);
         if (!file.is_open()) {
@@ -51,7 +51,7 @@ namespace dm {
         return true;
     }
 
-    bool Schema::write(const std::string& filePath) const {
+    bool Form::write(const std::string& filePath) const {
         // attempt to open the file
         std::ofstream file(filePath);
         if (!file.is_open()) {
@@ -76,7 +76,7 @@ namespace dm {
         return true;
     }
 
-    void Schema::_input(std::istream& stream) {
+    void Form::_input(std::istream& stream) {
         bool awaitingSection = true;
         std::string header;
         std::string line;
@@ -111,9 +111,9 @@ namespace dm {
         }
     }
 
-    void Schema::_output(std::ostream& stream) const {
+    void Form::_output(std::ostream& stream) const {
         std::string newLine;
-        for (const Schema::Section& section : *this) {
+        for (const Form::Section& section : *this) {
             // separate rows using a newline
             stream << newLine;
             newLine = "\n\n";
@@ -134,9 +134,9 @@ namespace dm {
 
     std::ostream& operator<<(
         std::ostream& stream, 
-        const Schema& schema
+        const Form& form
     ) {
-        stream << Schema::encode(schema);
+        stream << Form::encode(form);
         return stream;
     }
 }

@@ -6,7 +6,7 @@
 #include "tile.hpp"
 #include "unit.hpp"
 #include "utils/cache.hpp"
-#include "utils/schema.hpp"
+#include "utils/form.hpp"
 
 #include <cstddef>
 #include <set>
@@ -43,14 +43,14 @@ namespace dm {
             Stage(void);
 
             Stage(
-                unsigned long id, 
+                unsigned long primeId, 
                 const std::string& filePath,
                 std::size_t rowCount,
                 std::size_t columnCount
             );
 
             Stage(
-                unsigned long id, 
+                unsigned long primeId, 
                 const std::string& filePath,
                 const std::string& name, 
                 std::size_t rowCount,
@@ -120,19 +120,19 @@ namespace dm {
         
         public:
             std::string toString(void) const override;
-            Schema toSchema(void) const override;
+            Form toForm(void) const override;
         
         // ========================================================================================
         // | LOGISTICS |
         // =============
         
         public:
-            static Stage* fetch(unsigned long id);
-            static bool isLoaded(unsigned long id);
+            static Stage* fetch(unsigned long primeId);
+            static bool isLoaded(unsigned long primeId);
 
             static Stage* load(const std::string& filePath);
-            static Stage* select(unsigned long id);
-            static bool unload(unsigned long id);
+            static Stage* select(unsigned long primeId);
+            static bool unload(unsigned long primeId);
         
         // ========================================================================================
         // | UTILITIES |

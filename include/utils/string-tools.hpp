@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace dm::strings {
+namespace dm::stringTools {
 
 // ================================================================================================
 // | FORMATTING |
@@ -13,8 +13,8 @@ namespace dm::strings {
 
     std::string trim(const std::string& string);
 
-    std::string toUpperCase(const std::string& string);
     std::string toLowerCase(const std::string& string);
+    std::string toUpperCase(const std::string& string);
 
 // ================================================================================================
 // | PARSING |
@@ -22,8 +22,13 @@ namespace dm::strings {
 
     std::vector<std::string> split(
         const std::string& string, 
+        const std::string& delimiter
+    );
+    
+    std::vector<std::string> split(
+        const std::string& string, 
         const std::string& delimiter, 
-        std::size_t maxSplits = 0
+        std::size_t maxSplits
     );
 
     std::vector<std::vector<std::string>> parseDsv(
@@ -34,7 +39,7 @@ namespace dm::strings {
 
     std::map<std::string, std::string> parseIni(
         std::vector<std::string> strings, 
-        const std::string& delimiter
+        const std::string& associator
     );
 }
 

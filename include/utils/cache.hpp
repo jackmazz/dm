@@ -109,10 +109,10 @@ namespace dm {
                 );
             }
 
-            const T* search(unsigned long id) const {
+            const T* search(unsigned long primeId) const {
                 // find an active asset associated with the given id
                 for (const T& asset : this->_storage) {
-                    if (asset.isActive() && asset.getId() == id) {
+                    if (asset.isActive() && asset.getPrimeId() == primeId) {
                         return &asset;
                     }
                 }
@@ -121,14 +121,14 @@ namespace dm {
                 return nullptr;
             }
 
-            T* search(unsigned long id) {
+            T* search(unsigned long primeId) {
                 return const_cast<T*>(
-                    static_cast<const Cache*>(this)->search(id)
+                    static_cast<const Cache*>(this)->search(primeId)
                 );
             }
 
-            bool contains(unsigned long id) const {
-                return this->search(id) != nullptr;
+            bool contains(unsigned long primeId) const {
+                return this->search(primeId) != nullptr;
             }
         
         // ========================================================================================
@@ -172,9 +172,9 @@ namespace dm {
                 return target;
             }
 
-            T* select(unsigned long id) {
+            T* select(unsigned long primeId) {
                 // find an active asset associated with the given id
-                T* target = this->search(id);
+                T* target = this->search(primeId);
                 if (target == nullptr) {
                     return nullptr;
                 }
@@ -196,9 +196,9 @@ namespace dm {
                 return target;
             }
 
-            bool remove(unsigned long id) {
+            bool remove(unsigned long primeId) {
                 // find an active asset associated with the given id
-                T* target = this->search(id);
+                T* target = this->search(primeId);
                 if (target == nullptr) {
                     return false;
                 }

@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <ostream>
 #include <string>
-#include <utility>
 
 namespace dm {
 
@@ -17,18 +16,18 @@ namespace dm {
     {}
 
     Asset::Asset(
-        unsigned long id,
+        unsigned long primeId,
         const std::string& filePath
     )
-        : Asset(id, filePath, "")
+        : Asset(primeId, filePath, "")
     {}
 
     Asset::Asset(
-        unsigned long id,
+        unsigned long primeId,
         const std::string& filePath,
         const std::string& name
     ) {
-        this->_id = id;
+        this->_primeId = primeId;
         this->_filePath = filePath;
         
         this->setName(name);
@@ -43,13 +42,13 @@ namespace dm {
         Asset::Contact contact;
         contact.typeId = this->getTypeId();
         contact.typeName = this->getTypeName();
-        contact.id = this->getId();
+        contact.primeId = this->getPrimeId();
         contact.filePath = this->getFilePath();
         return contact;
     }
 
-    unsigned long Asset::getId(void) const {
-        return this->_id;
+    unsigned long Asset::getPrimeId(void) const {
+        return this->_primeId;
     }
     
     std::string Asset::getFilePath(void) const {
@@ -89,12 +88,24 @@ namespace dm {
     }
 
 // ================================================================================================
+// | COMPARATORS |
+// ===============
+
+    bool Asset::equals(const Asset& other) const {
+        return this->compare(other) == 0;
+    }
+
+    std::size_t Asset::compare(const Asset& other) const {
+        return this->getPrimeId() - other.getPrimeId();
+    }
+
+// ================================================================================================
 // | LOGISTICS |
 // =============
 
     bool Asset::save(void) const {
-        // write the schema to the state directory
-        return this->toSchema().write(
+        // write the form to the state directory
+        return this->toForm().write(
             std::string(DM_STATE_DIR) + this->getFilePath()
         );
     }
@@ -102,7 +113,42 @@ namespace dm {
 // ================================================================================================
 // | OPERATORS |
 // =============
-        
+
+    bool operator==(
+        const Asset& assetA,
+        const Asset& assetB
+    ) {
+        return assetA.equals(assetB);
+    }
+    
+    bool operator<(
+        const Asset& assetA,
+        const Asset& assetB
+    ) { 
+        return assetA.compare(assetB) < 0;
+    }
+    
+    bool operator<=(
+        const Asset& assetA,
+        const Asset& assetB
+    ) {
+        return assetA.compare(assetB) <= 0;
+    }
+    
+    bool operator>(
+        const Asset& assetA,
+        const Asset& assetB
+    ) {
+        return assetA.compare(assetB) > 0;
+    }
+
+    bool operator>=(
+        const Asset& assetA,
+        const Asset& assetB
+    ) {
+        return assetA.compare(assetB) >= 0;
+    }
+    
     std::ostream& operator<<(
         std::ostream& stream, 
         const Asset& asset

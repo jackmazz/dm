@@ -7,7 +7,7 @@
 #include <vector>
 
 namespace dm {
-    class Schema : public std::map<std::string, std::vector<std::string>> {
+    class Form : public std::map<std::string, std::vector<std::string>> {
         
         // ========================================================================================
         // | TYPES |
@@ -21,8 +21,8 @@ namespace dm {
         // =======================
         
         public:
-            static Schema decode(const std::string& string);
-            static std::string encode(const Schema& schema);
+            static Form decode(const std::string& string);
+            static std::string encode(const Form& form);
         
         // ========================================================================================
         // | LOGISTICS |
@@ -43,7 +43,7 @@ namespace dm {
     
     std::ostream& operator<<(
         std::ostream& stream, 
-        const Schema& schema
+        const Form& form
     );
 }
 

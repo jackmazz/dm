@@ -4,6 +4,7 @@
 #include "config.hpp"
 #include "unit.hpp"
 #include "utils/cache.hpp"
+#include "utils/form.hpp"
 
 #include <string>
 
@@ -21,12 +22,12 @@ namespace dm {
             Actor(void);
 
             Actor(
-                unsigned long id,
+                unsigned long primeId,
                 const std::string& filePath
             );
 
             Actor(
-                unsigned long id, 
+                unsigned long primeId, 
                 const std::string& filePath,
                 const std::string& name, 
                 char marker
@@ -53,26 +54,26 @@ namespace dm {
         // ==============
         
         public:
-            Schema toSchema(void) const override;
+            Form toForm(void) const override;
         
         // ========================================================================================
         // | LOGISTICS |
         // =============
         
         public:
-            static Actor* fetch(unsigned long id);
-            static bool isLoaded(unsigned long id);
+            static Actor* fetch(unsigned long primeId);
+            static bool isLoaded(unsigned long primeId);
 
             static Actor* load(const std::string& filePath);
-            static Actor* select(unsigned long id);
-            static bool unload(unsigned long id);
+            static Actor* select(unsigned long primeId);
+            static bool unload(unsigned long primeId);
         
         // ========================================================================================
         // | MEMBERS |
         // ===========
         
          private:
-            static Cache<Actor, DM_ACTOR_CACHE_CAP> _cache; // unit storage
+            static Cache<Actor, DM_ACTOR_CACHE_CAP> _cache; // actor storage
     };
 }
 
