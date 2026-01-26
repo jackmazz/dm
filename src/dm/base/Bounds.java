@@ -67,10 +67,16 @@ public final class Bounds implements Cloneable, Comparable<Bounds> {
             this.getLayers() == bounds.getLayers()
         );
     }
-    
     @Override
     public boolean compareTo(Bounds bounds) {
-        return this.getArea() - bounds.getArea();
+        if (bounds == null) { return -1; }
+        if (this.getRows() != bounds.getRows()) {
+            return this.getRows() - bounds.getRows();
+        } else if (this.getColumns() != bounds.getColumns()) {
+            return this.getColumns() - bounds.getColumns();
+        } else {
+            return this.getLayers() - bounds.getLayers();
+        }
     }
 
 // ================================================================================================
@@ -86,10 +92,21 @@ public final class Bounds implements Cloneable, Comparable<Bounds> {
 
     @Override
     public String toString() {
-        return "("
-            + this.getRows() + ", "
-            + this.getColumns() + ", "
-            + this.getLayers() + ")";
+        return String.format(
+            "(%d, %d, %d)",
+            this.getRows(),
+            this.getColumns(),
+            this.getLayers()
+        );
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+            this.getRows(),
+            this.getColumns(),
+            this.getLayers()
+        );
     }
 }
 

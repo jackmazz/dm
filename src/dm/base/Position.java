@@ -59,9 +59,9 @@ public final class Position implements Cloneable, Comparable<Position> {
             this.getLayer() == position.getLayer()
         );
     }
-    
     @Override
     public boolean compareTo(Position position) {
+        if (position == null) { return -1; }
         if (this.getRow() != position.getRow()) {
             return this.getRow() - position.getRow();
         } else if (this.getColumn() != position.getColumn()) {
@@ -85,10 +85,21 @@ public final class Position implements Cloneable, Comparable<Position> {
 
     @Override
     public String toString() {
-        return "("
-            + this.getRow() + ", "
-            + this.getColumn() + ", "
-            + this.getLayer() + ")";
+        return String.format(
+            "(%d, %d, %d)",
+            this.getRow(),
+            this.getColumn(),
+            this.getLayer()
+        );
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objets.hash(
+            this.getRow(),
+            this.getColumn(),
+            this.getLayer()
+        );
     }
 }
 

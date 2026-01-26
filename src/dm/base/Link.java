@@ -49,10 +49,16 @@ public final class Link implements Cloneable, Comparable<Link> {
             this.getFormName().equals(link.getFormName())
         );
     }
-    
     @Override
     public boolean compareTo(Link link) {
-        return this.getTag().getValue() - link.getTag().getValue();
+        if (link == null) { return -1; }
+        if (this.getFormTag() != link.getFormTag()) {
+            return this.getFormTag() - link.getFormTag();
+        } else if (this.getObjectTag() != link.getObjectTag()) {
+            return this.getObjectTag() - link.getObjectTag();
+        } else {
+            return this.getFormName() - link.getFormName();
+        }
     }
 
 // ================================================================================================
@@ -68,10 +74,21 @@ public final class Link implements Cloneable, Comparable<Link> {
 
     @Override
     public String toString() {
-        return "("
-            + this.getFormTag().toString() + ", "
-            + this.getObjectTag().toString() + ", "
-            + this.getFormName().toString() + ")";
+        return String.format(
+            "(%s, %s, \"%s\")",
+            this.getFormTag().toString(),
+            this.getObjectTag().toString(),
+            this.getFormName()
+        );
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+            this.getFormTag(),
+            this.getObjectTag(),
+            this.getFormName()
+        );
     }
 }
 

@@ -2,6 +2,7 @@ package dm.mech;
 
 import dm.base.Bounds;
 import dm.base.Effect;
+import dm.base.Label;
 import dm.base.Link;
 import dm.base.Marker;
 import dm.base.Position;
@@ -22,12 +23,12 @@ public final class Stage extends Asset {
 // | FIELDS |
 // ==========
 
-    private final ArrayList<Tile> tiles; // tile storage
+    private final List<Tile> tiles; // tile storage
     private final Bounds bounds; // width and height of the stage
     
-    private final HashMap<Link, Position> actorLinks; // actor position storage
-    private final HashMap<Link, Position> chestLinks; // chest position storage
-    private final HashMap<Link, Position> propLinks; // prop position storage
+    private final Map<Link, Position> actorLinks; // actor position storage
+    private final Map<Link, Position> chestLinks; // chest position storage
+    private final Map<Link, Position> propLinks; // prop position storage
 
 // ================================================================================================
 // | CONSTRUCTORS |
@@ -37,7 +38,7 @@ public final class Stage extends Asset {
     public Stage(Link link, Bounds bounds) {
         this(
             link,
-            "<label>", 
+            new Label(),
             bounds,
             new ArrayList<>(), 
             new ArrayList<>(),
@@ -46,14 +47,13 @@ public final class Stage extends Asset {
     }
     public Stage(
         Link link,
-        String label,
+        Label label,
         Bounds bounds,
         List<Marker> markers,
         List<Effect> effects,
         boolean generic
     ) {
         super(link, label, generic);
-        
         this.bounds = (bounds != null) ? bounds : new Bounds();
         this.tiles = new ArrayList<>();
         this.actorLinks = new HashMap<>();
@@ -83,59 +83,121 @@ public final class Stage extends Asset {
 // | ACCESSORS |
 // =============
 
-    public List<Tile> getTiles() { return this.tiles.clone(); }
+    public Bounds getBounds() { return this.bounds(); }
+    public int getArea() { return this.getBounds().getArea(); }
+    public int getRows() { return this.getBounds().getRows(); }
+    public int getColumns() { return this.getBounds().getColumns(); }
+    
+    public int countTiles() { return this.tiles.size(); }
+    public int countUnits() {
+        int count = 0;
+        for (Tile tile : this) {
+            count += tile.countUnits();
+        }
+        return count;
+    }
+    public int countActors() {
+        int count = 0;
+        for (Tile tile : this) {
+            count += tile.countActors();
+        }
+        return count;
+    }
+    public int countChests() {
+        int count = 0;
+        for (Tile tile : this) {
+            count += tile.countChests();
+        }
+        return count;
+    }
+    public int countProps() {
+        int count = 0;
+        for (Tile tile : this) {
+            count += tile.countProps();
+        }
+        return count;
+    }
+    
+    public int countUnitsAt(Position position) {
+        if (!this.isInBounds(position)) { return null; }
+        Tile tile = this.getTileAt(position);
+        return tile.countUnits();
+    }
+    public int countActorsAt() {
+        if (!this.isInBounds(position)) { return null; }
+        Tile tile = this.getTileAt(position);
+        return tile.countActors();
+    }
+    public int countChestsAt() {
+        if (!this.isInBounds(position)) { return null; }
+        Tile tile = this.getTileAt(position);
+        return tile.countChests();
+    }
+    public int countPropsAt() {
+        if (!this.isInBounds(position)) { return null; }
+        Tile tile = this.getTileAt(position);
+        return tile.countProps();
+    }
+
+    public List<Tile> getTiles() {
+        List<Tile> tiles = new ArrayList<>();
+        for (Tile tile : this.tiles) {
+            tiles.append(tile);
+        }
+        return tiles;
+    }
     public List<Marker> getMarkers() {
-        ArrayList<Marker> markers = new ArrayList<>();
+        List<Marker> markers = new ArrayList<>();
         for (Tile tile : this.tiles) {
             markers.append(tile.getMarker());
         }
         return markers;
     }
     public List<Effect> getEffects() {
-        ArrayList<Effect> effects = new ArrayList<>();
+        List<Effect> effects = new ArrayList<>();
         for (Tile tile : this.tiles) {
             effects.append(tile.getEffect());
         }
         return effects;
     }
     public List<Unit> getUnits() {
-        ArrayList<Unit> units = new ArrayList<>();
+        List<Unit> units = new ArrayList<>();
         units.addAll(this.getActors());
         units.addAll(this.getChests());
         units.addAll(this.getProps());
         return units
     }
     public List<Actor> getActors() {
-        ArrayList<Actor> actors = new ArrayList<>();
+        List<Actor> actors = new ArrayList<>();
         for (Tile tile : this.tiles) {
             actors.addAll(tile.getActors());
         }
         return actors;
     }
     public List<Chest> getChests() {
-        ArrayList<Chest> chests = new ArrayList<>();
+        List<Chest> chests = new ArrayList<>();
         for (Tile tile : this.tiles) {
             chests.addAll(tile.getChests());
         }
         return chests;
     }
     public List<Prop> getProps() {
-        ArrayList<Prop> props = new ArrayList<>();
+        List<Prop> props = new ArrayList<>();
         for (Tile tile : this.tiles) {
-            props.append(tile.getProps());
+            props.addAll(tile.getProps());
         }
         return props;
     }
     
     public List<Unit> getLoadedUnits() {
-        ArrayList<Unit> units = new ArrayList<>();
+        List<Unit> units = new ArrayList<>();
         units.addAll(this.getLoadedActors());
         units.addAll(this.getLoadedChests());
         units.addAll(this.getLoadedProps());
         return units
     }
     public List<Actor> getLoadedActors() {
-        ArrayList<Actor> actors = new ArrayList<>();
+        List<Actor> actors = new ArrayList<>();
         for (Link link : this.actorLinks) {
             if (!Actor.isLoaded(link)) { continue; }
             Actor.fetch(link).discard();
@@ -143,7 +205,7 @@ public final class Stage extends Asset {
         return actors;
     }
     public List<Chest> getLoadedChests() {
-        ArrayList<Chest> chests = new ArrayList<>();
+        List<Chest> chests = new ArrayList<>();
         for (Link link : this.chestLinks) {
             if (!Link.isLoaded(link)) { continue; }
             Chest.fetch(link).discard();
@@ -151,7 +213,7 @@ public final class Stage extends Asset {
         return chests;
     }
     public List<Prop> getLoadedProps() {
-        ArrayList<Prop> props = new ArrayList<>();
+        List<Prop> props = new ArrayList<>();
         for (Link link : this.propLinks) {
             if (!Link.isLoaded(link)) { continue; }
             Prop.fetch(link).discard();
@@ -160,7 +222,7 @@ public final class Stage extends Asset {
     }
     
     public Set<Link> getUnitLinks() {
-        HashSet<Link> links = new HashSet<>();
+        Set<Link> links = new HashSet<>();
         links.addAll(this.getActorLinks());
         links.addAll(this.getChestLinks());
         links.addAll(this.getPropLinks());
@@ -171,7 +233,7 @@ public final class Stage extends Asset {
     public Set<Link> getPropLinks() { return this.getLinks(this.propLinks); }
     
     public Set<Position> getLinkedUnitPositions() {
-        HashSet<Position> positions = new HashSet<>();
+        Set<Position> positions = new HashSet<>();
         positions.addAll(this.getLinkedActorPositions());
         positions.addAll(this.getLinkedChestPositions());
         positions.addAll(this.getLinkedPropPositions());
@@ -189,11 +251,6 @@ public final class Stage extends Asset {
     public Position getLinkedActorPosition(Link link) { return this.getLinkedPosition(this.actorLinks); };
     public Position getLinkedChestPosition(Link link) { return this.getLinkedPosition(this.chestLinks); };
     public Position getLinkedPropPosition(Link link) { return this.getLinkedPosition(this.propLinks); };
-    
-    public Bounds getBounds() { return this.bounds(); }
-    public int getArea() { return this.getBounds().getArea(); }
-    public int getRows() { return this.getBounds().getRows(); }
-    public int getColumns() { return this.getBounds().getColumns(); }
     
     public Tile getTileAt(Position position) {
         if (!this.isInBounds(position)) { return null; }
@@ -414,6 +471,48 @@ public final class Stage extends Asset {
 
     public boolean isInBounds(Position position) { return this.getBounds().encloses(position); }
     
+    public boolean hasUnitsAt(Position position) {
+        if (!this.isInBounds(position)) { return null; }
+        Tile tile = this.getTileAt(position);
+        return tile.hasUnits();
+    }
+    public boolean hasActorsAt(Position position) {
+        if (!this.isInBounds(position)) { return null; }
+        Tile tile = this.getTileAt(position);
+        return tile.hasActors();
+    }
+    public boolean hasChestsAt(Position position) {
+        if (!this.isInBounds(position)) { return null; }
+        Tile tile = this.getTileAt(position);
+        return tile.hasChests();
+    }
+    public boolean hasPropsAt(Position position) {
+        if (!this.isInBounds(position)) { return null; }
+        Tile tile = this.getTileAt(position);
+        return tile.hasProps();
+    }
+    
+    public boolean hasUnitAt(Position position) {
+        if (!this.isInBounds(position)) { return null; }
+        Tile tile = this.getTileAt(position);
+        return tile.hasUnitAt(position.getLayer());
+    }
+    public boolean hasActorAt(Position position) {
+        if (!this.isInBounds(position)) { return null; }
+        Tile tile = this.getTileAt(position);
+        return tile.hasActorAt(position.getLayer());
+    }
+    public boolean hasChestAt(Position position) {
+        if (!this.isInBounds(position)) { return null; }
+        Tile tile = this.getTileAt(position);
+        return tile.hasChestAt(position.getLayer());
+    }
+    public boolean hasPropAt(Position position) {
+        if (!this.isInBounds(position)) { return null; }
+        Tile tile = this.getTileAt(position);
+        return tile.hasPropAt(position.getLayer());
+    }
+    
     public boolean isLinkedToUnit(Link link) {
         return (
             this.isLinkedToActor(link) ||
@@ -424,13 +523,6 @@ public final class Stage extends Asset {
     public boolean isLinkedToActor(Link link) { return this.isLinked(this.actorLinks, link); }
     public boolean isLinkedToChest(Link link) { return this.isLinked(this.chestLinks, link); }
     public boolean isLinkedToProp(Link link) { return this.isLinked(this.propLinks, link); }
- 
-// ================================================================================================
-// | REPLICATORS |
-// ===============
-
-    @Override
-    public Stage clone() { new Stage(this); }
  
 // ================================================================================================
 // | ITERATORS |
@@ -444,13 +536,16 @@ public final class Stage extends Asset {
 // ==============
 
     @Override
-    public String toAsciiArt() {
+    public String toGraphic() {
         StringBuilder builder = new StringBuilder();
+        String newLine = "";
         for (int i = 0; i < this.getRows(); i++) {
+            builder.append(newLine);
+            newLine = System.lineSeparator()
+        
             for (int j = 0; j < this.getColumns(); j++) {
                 builder.append(this.getMarkerAt(i, j));
             }
-            builder.append(System.lineSeparator());
         }
         
         return builder.toString();
@@ -461,14 +556,14 @@ public final class Stage extends Asset {
 // =============
 
     private Set<Link> <K, V> getLinks(Map<K, V> links) {
-        HashSet<Link> linkSet = new HashSet<>();
+        Set<Link> linkSet = new HashSet<>();
         for (Link link : links.keySet()) {
             linkSet.add(link);
         }
         return linkSet;
     }
     private Set<Position> <K, V> getLinkedPositions(Map<K, V> links) {
-        HashSet<Link> positionSet = new HashSet<>();
+        Set<Link> positionSet = new HashSet<>();
         for (Position position : links.values()) {
             positionSet.add(position);
         }

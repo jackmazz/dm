@@ -37,18 +37,21 @@ public final class Marker implements Cloneable, Comparable<Link> {
 // ===============
 
     @Override
-    public boolean equals(Link link) {
-        if (link == null) { return false; }
+    public boolean equals(Marker marker) {
+        if (marker == null) { return false; }
         return (
-            this.getFormTag().equals(link.getFormTag()) &&
-            this.getObjectTag().equals(link.getObjectTag()) &&
-            this.getFormName().equals(link.getFormName())
+            this.getSymbol() == marker.getSymbol() &&
+            this.getColor().equals(marker.getColor())
         );
     }
-    
     @Override
-    public boolean compareTo(Link link) {
-        return this.getTag().getValue() - link.getTag().getValue();
+    public boolean compareTo(Marker marker) {
+        if (marker == null) { return -1; }
+        if (this.getSymbol() != marker.getSymbol()) {
+            return this.getSymbol() - marker.getSymbol();
+        } else {
+            return this.getColor().compareTo(marker.getColor());
+        }
     }
 
 // ================================================================================================
@@ -64,13 +67,19 @@ public final class Marker implements Cloneable, Comparable<Link> {
 
     @Override
     public String toString() {
-        return "("
-            + this.getSymbol().toString() + ", "
-            + this.getColor().toString() + ")";
+        return String.format(
+            "(%c, %s)",
+            this.getSymbol(),
+            this.getColor().toString()
+        );
     }
     
-    public String toAsciiArt() {
-        return String.valueOf(this.getSymbol());
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+            this.getSymbol(),
+            this.getColor()
+        );
     }
 }
 

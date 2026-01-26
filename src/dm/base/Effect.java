@@ -1,6 +1,6 @@
 package dm.base;
 
-public enum Effect {
+public final enum Effect {
 
 // ================================================================================================
 // | CONSTANTS |
@@ -15,7 +15,7 @@ public enum Effect {
 // | FIELDS |
 // ==========
 
-    private char symbol;
+    private final char symbol;
 
 // ================================================================================================
 // | CONSTRUCTORS |
@@ -28,7 +28,7 @@ public enum Effect {
 // =============
 
     public char getSymbol() { return this.symbol; }
-
+    
 // ================================================================================================
 // | PARSERS |
 // ===========

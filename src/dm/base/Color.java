@@ -63,16 +63,16 @@ public final class Color implements Cloneable, Comparable<Color> {
 
     @Override
     public boolean equals(Color color) {
-        if (link == null) { return false; }
+        if (color == null) { return false; }
         return (
             this.getRed().equals(link.getRed()) &&
             this.getGreen().equals(link.getGreen()) &&
             this.getBlue().equals(link.getBlue())
         );
     }
-    
     @Override
     public boolean compareTo(Color color) {
+        if (color == null) { return -1; }
         if (this.getRed() != position.getRed()) {
             return this.getRed() - position.getRed();
         } else if (this.getGreen() != position.getGreen()) {
@@ -99,7 +99,16 @@ public final class Color implements Cloneable, Comparable<Color> {
             + this.getGreen() << 2
             + this.getBlue();
         
-        return "0x" + Integer.toHexString(hex);
+        return String.format("%#X", hex);
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+            this.getRed(),
+            this.getGreen(),
+            this.getBlue()
+        );
     }
 }
 

@@ -38,11 +38,11 @@ class final Tag implements Cloneable, Comparable<Tag> {
     @Override
     public boolean equals(Tag tag) {
         if (tag == null) { return false; }
-        return this.getValue() = tag.value;
+        return this.getValue() == tag.value;
     }
-    
     @Override
     public boolean compareTo(Tag tag) {
+        if (tag == null) { return -1; }
         return this.getValue() - tag.getValue();
     }
 
@@ -59,7 +59,12 @@ class final Tag implements Cloneable, Comparable<Tag> {
 
     @Override
     public String toString() {
-        return "0x" + Integer.toHexString(this.getValue());
+        return String.format("%#X", this.getValue());
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objets.hash(this.getValue());
     }
 }
 
